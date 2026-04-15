@@ -780,16 +780,48 @@ function getDistanceKm(lat1,lon1,lat2,lon2){
 
 function startNearMe(){
   const content=document.getElementById('nearme-content');
-  // Show results immediately using Kuwait City as default — never hangs
-  showNearbyProps(29.3697,47.9783,true);
-  // Try GPS in background — if it works, update the view silently
-  if(navigator.geolocation){
+  if(!navigator.geolocation){
+    content.innerHTML=`<div class="empty-state"><div class="empty-icon">❌</div><p>Your browser doesn't support location. Try Chrome or Safari.</p></div>`;return;
+  }
+  function doGPS(){
+    content.innerHTML=`<div style="text-align:center;padding:2rem"><div style="font-size:40px;margin-bottom:12px">📡</div><div style="font-size:15px;font-weight:600;color:var(--navy)">Getting your location...</div><div style="font-size:13px;color:var(--muted);margin-top:8px">Allow location access when prompted</div></div>`;
+    let done=false;
+    // Fallback: if GPS takes too long, use IP geolocation automatically
+    const giveUp=setTimeout(()=>{
+      if(!done){
+        content.innerHTML=`<div style="text-align:center;padding:1rem"><div style="font-size:24px;margin-bottom:8px">🌐</div><div style="font-size:13px;color:var(--muted)">Using network location...</div></div>`;
+        fetch('https://ipwho.is/')
+          .then(r=>r.json())
+          .then(d=>{if(!done&&d.latitude&&d.longitude){done=true;showNearbyProps(d.latitude,d.longitude,true);}else if(!done){done=true;showNearbyProps(29.3697,47.9783,true);}})
+          .catch(()=>{if(!done){done=true;showNearbyProps(29.3697,47.9783,true);}});
+      }
+    },12000);
     navigator.geolocation.getCurrentPosition(
-      pos=>showNearbyProps(pos.coords.latitude,pos.coords.longitude,false),
-      ()=>{}, // silent fail — already showing default results
-      {timeout:8000,enableHighAccuracy:false,maximumAge:60000}
+      pos=>{if(!done){done=true;clearTimeout(giveUp);showNearbyProps(pos.coords.latitude,pos.coords.longitude,false);}},
+      err=>{if(!done){
+        if(err.code===1){
+          done=true;clearTimeout(giveUp);
+          content.innerHTML=`<div class="empty-state"><div class="empty-icon">🔒</div><p style="font-weight:700;margin-bottom:8px">Location permission denied</p><p style="font-size:13px;color:var(--muted);margin-bottom:12px"><strong>Chrome:</strong> Click 🔒 in address bar → Site settings → Location → Allow<br><br><strong>iPhone Safari:</strong> Settings → Privacy → Location Services → Safari → While Using App<br><br>Then tap Try Again below.</p><button onclick="startNearMe()" style="background:var(--navy);color:white;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer">🔄 Try Again</button></div>`;
+        }else{
+          // GPS unavailable or timed out — use IP fallback
+          clearTimeout(giveUp);
+          fetch('https://ipwho.is/')
+            .then(r=>r.json())
+            .then(d=>{if(!done&&d.latitude&&d.longitude){done=true;showNearbyProps(d.latitude,d.longitude,true);}else if(!done){done=true;showNearbyProps(29.3697,47.9783,true);}})
+            .catch(()=>{if(!done){done=true;showNearbyProps(29.3697,47.9783,true);}});
+        }
+      }},
+      {timeout:10000,enableHighAccuracy:false,maximumAge:30000}
     );
   }
+  // Check permission state first — avoids silent hang when blocked
+  if(navigator.permissions){
+    navigator.permissions.query({name:'geolocation'}).then(p=>{
+      if(p.state==='denied'){
+        content.innerHTML=`<div class="empty-state"><div class="empty-icon">🔒</div><p style="font-weight:700;margin-bottom:8px">Location is blocked</p><p style="font-size:13px;color:var(--muted);margin-bottom:12px"><strong>Chrome:</strong> Click the 🔒 lock in the address bar → Site settings → Location → Allow<br><br><strong>iPhone Safari:</strong> Settings app → Privacy → Location Services → Safari → While Using<br><br>Then come back and try again.</p><button onclick="startNearMe()" style="background:var(--navy);color:white;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer">🔄 Try Again</button></div>`;
+      }else{doGPS();}
+    }).catch(()=>doGPS());
+  }else{doGPS();}
 }
 
 function showNearbyProps(userLat,userLon,isApprox){
