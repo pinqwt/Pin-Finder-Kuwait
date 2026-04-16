@@ -282,7 +282,33 @@ footer span{color:var(--gold);}
 .area-opt{padding:8px 13px;font-size:13px;cursor:pointer;color:var(--text);}
 .area-opt:hover{background:var(--cream2);color:var(--navy);}
 .area-opt-group{padding:5px 13px 3px;font-size:10px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:0.6px;background:var(--cream);position:sticky;top:0;border-bottom:1px solid var(--border);}
+/* EXTRA FILTERS ROW */
+.filters-row2{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.4fr;gap:8px;margin-top:8px;}
+.price-input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:white;color:var(--text);outline:none;}
+.price-input:focus{border-color:var(--gold);}
+body.ar .filters-row2{direction:rtl;}
+@media(max-width:700px){.filters-row2{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.filters-row2{grid-template-columns:1fr;}}
+/* SORT LABEL */
+.sort-wrap{display:flex;align-items:center;gap:6px;}
+.sort-wrap label{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;}
+/* WA SHARE BUTTON ON CARD */
+.card-share-btn{background:none;border:none;cursor:pointer;font-size:15px;padding:0;line-height:1;opacity:0.75;}
+.card-share-btn:hover{opacity:1;}
+/* MAP TAB */
+#map-leaflet{height:520px;border-radius:16px;overflow:hidden;}
+@media(max-width:600px){#map-leaflet{height:380px;}}
+/* RECENTS EMPTY */
+.recents-empty{text-align:center;padding:3rem 1rem;color:var(--muted);}
+/* PAYMENT METHOD TABS */
+.pay-method-row{display:flex;gap:10px;margin-bottom:16px;}
+.pay-method-btn{flex:1;padding:10px;border:2px solid var(--border);border-radius:12px;background:white;cursor:pointer;font-size:13px;font-weight:700;color:var(--muted);text-align:center;transition:all .2s;}
+.pay-method-btn.active{border-color:var(--gold);background:var(--cream2);color:var(--navy);}
+/* VIEWS BADGE */
+.card-views{font-size:10px;color:var(--muted);margin-left:4px;}
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -305,6 +331,8 @@ footer span{color:var(--gold);}
     <button class="mnav-btn" onclick="switchTab('nearme')" id="mnav-nearme"><span class="icon">📍</span><span id="ml-nearme">Near Me</span></button>
     <button class="mnav-btn mnav-list" onclick="openSubmit()"><span id="ml-list">+ List</span></button>
     <button class="mnav-btn" onclick="switchTab('admin')" id="mnav-admin"><span class="icon">👤</span><span id="ml-owner">Owner</span></button>
+    <button class="mnav-btn" onclick="switchTab('recents')" id="mnav-recents"><span class="icon">🕐</span><span id="ml-recents">Recent</span></button>
+    <button class="mnav-btn" onclick="switchTab('map')" id="mnav-map"><span class="icon">🗺</span><span id="ml-map">Map</span></button>
     <button class="mnav-btn" onclick="toggleLang()"><span class="icon">🌐</span><span id="ml-lang">عربي</span></button>
   </div>
 </nav>
@@ -349,6 +377,13 @@ footer span{color:var(--gold);}
         <select class="fsel" id="f-type"><option value="">Any Type</option><option>Apartment</option><option>Villa</option><option>Studio</option><option>Chalet</option><option>Floor</option><option>Office</option></select>
         <select class="fsel" id="f-purpose"><option value="">Rent or Buy</option><option>Rent</option><option>Buy</option></select>
       </div>
+      <div class="filters-row2">
+        <input class="price-input" type="number" id="f-price-min" placeholder="Min KD" min="0">
+        <input class="price-input" type="number" id="f-price-max" placeholder="Max KD" min="0">
+        <select class="fsel" id="f-beds"><option value="">Any Beds</option><option value="0">Studio</option><option value="1">1+ Bed</option><option value="2">2+ Beds</option><option value="3">3+ Beds</option><option value="4">4+ Beds</option><option value="5">5+ Beds</option></select>
+        <select class="fsel" id="f-sort"><option value="recommended">⭐ Recommended</option><option value="price-asc">💰 Price: Low→High</option><option value="price-desc">💰 Price: High→Low</option><option value="newest">🆕 Newest First</option><option value="oldest">📅 Oldest First</option><option value="most-viewed">🔥 Most Viewed</option><option value="least-viewed">👁 Least Viewed</option></select>
+        <button class="search-btn" onclick="doSearch()" style="font-size:13px">🔍 Search</button>
+      </div>
       <div class="chips-row">
         <span class="chip" onclick="setSearch('budget apartment under 300')">💰 Budget</span>
         <span class="chip" onclick="setSearch('luxury villa pool')">🏊 Villa+Pool</span>
@@ -367,6 +402,8 @@ footer span{color:var(--gold);}
     <button class="tab" onclick="switchTab('favourites')" id="dt-favourites">❤️ Favourites</button>
     <button class="tab" onclick="switchTab('nearme')" id="dt-nearme">📍 Near Me</button>
     <button class="tab" onclick="switchTab('admin')" id="dt-admin">👤 Properties Owner</button>
+    <button class="tab" onclick="switchTab('recents')" id="dt-recents">🕐 Recently Viewed</button>
+    <button class="tab" onclick="switchTab('map')" id="dt-map">🗺 Map</button>
   </div>
   <div class="stats-bar">
     <div class="stat-item"><div class="stat-num" id="stat-props">—</div><div class="stat-label" id="sl-props">Properties</div></div>
@@ -404,6 +441,18 @@ footer span{color:var(--gold);}
       <div class="admin-title" id="admin-title">👤 Properties Owner Panel</div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:1rem" id="admin-sub">Sign in with your registered phone to manage your listings. Only you can edit or remove what you've listed.</p>
       <div id="admin-list"><div class="empty-state"><p>No listings yet.</p></div></div>
+    </div>
+  </div>
+  <div id="tab-recents" style="display:none">
+    <div class="admin-panel">
+      <div class="admin-title" id="recents-title">🕐 Recently Viewed</div>
+      <div id="recents-list"><div class="recents-empty"><div style="font-size:40px">🕐</div><p id="recents-empty-txt">No recently viewed properties yet.</p></div></div>
+    </div>
+  </div>
+  <div id="tab-map" style="display:none">
+    <div class="admin-panel" style="padding:1rem">
+      <div class="admin-title" id="map-title" style="margin-bottom:12px">🗺 Properties Map</div>
+      <div id="map-leaflet"></div>
     </div>
   </div>
 </div>
@@ -444,6 +493,9 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const ADMIN_PASS='Hkerba150815';
 let PROPS=[],isAR=false,selectedPlan='monthly',selectedPay='bank',selectedPhoto='';
 let terminalAuthed=false;
+let VIEWS=JSON.parse(localStorage.getItem('pinq8_views')||'{}');
+let RECENTS=JSON.parse(localStorage.getItem('pinq8_recents')||'[]');
+let _leafletMap=null;
 
 const BG={Apartment:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=70',Villa:'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=600&q=70',Studio:'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=70',Chalet:'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=600&q=70',Floor:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=70',Office:'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=70',default:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=70'};
 function getBg(t){return BG[t]||BG.default;}
@@ -511,9 +563,9 @@ const T={
 en:{
   badge:"PinQ8 — Kuwait's #1 Property Platform",hlList:"+ List Your Property",langBtn:"🌐 العربية",
   nlSearch:"Search",nlFeatured:"Featured",nlOwner:"Properties Owner",
-  dtSearch:"🔍 Search Results",dtFeatured:"⭐ Featured",dtAdmin:"👤 Properties Owner",dtNearme:"📍 Near Me",dtFavs:"❤️ Favourites",
+  dtSearch:"🔍 Search Results",dtFeatured:"⭐ Featured",dtAdmin:"👤 Properties Owner",dtNearme:"📍 Near Me",dtFavs:"❤️ Favourites",dtRecents:"🕐 Recently Viewed",dtMap:"🗺 Map",
   splashSub:"Loading your dream property...",
-  mlSearch:"Search",mlFeatured:"Featured",mlList:"+ List",mlOwner:"Owner",mlLang:"عربي",mlNearme:"Near Me",mlFavs:"Saved",
+  mlSearch:"Search",mlFeatured:"Featured",mlList:"+ List",mlOwner:"Owner",mlLang:"عربي",mlNearme:"Near Me",mlFavs:"Saved",mlRecents:"Recent",mlMap:"Map",
   slProps:"Properties",slAreas:"Areas",slAi:"AI Reviewed",slKw:"Kuwait Only",
   esText:"Use the search above to find your ideal property.",
   adminTitle:"👤 Properties Owner Panel",adminSub:"Sign in with your registered phone to manage your listings. Only you can edit or remove what you've listed.",
@@ -585,9 +637,9 @@ en:{
 ar:{
   badge:"المنصة العقارية الأولى في الكويت 🇰🇼",hlList:"+ أضف عقارك",langBtn:"🌐 English",
   nlSearch:"بحث",nlFeatured:"مميزة",nlOwner:"لوحة المالك",
-  dtSearch:"🔍 نتائج البحث",dtFeatured:"⭐ مميزة",dtAdmin:"👤 لوحة المالك",dtNearme:"📍 بالقرب مني",dtFavs:"❤️ المحفوظات",
+  dtSearch:"🔍 نتائج البحث",dtFeatured:"⭐ مميزة",dtAdmin:"👤 لوحة المالك",dtNearme:"📍 بالقرب مني",dtFavs:"❤️ المحفوظات",dtRecents:"🕐 شاهدت مؤخراً",dtMap:"🗺 الخريطة",
   splashSub:"جاري تحميل عقار أحلامك...",
-  mlSearch:"بحث",mlFeatured:"مميزة",mlList:"+ أضف",mlOwner:"مالك",mlLang:"English",mlNearme:"قربي",mlFavs:"محفوظ",
+  mlSearch:"بحث",mlFeatured:"مميزة",mlList:"+ أضف",mlOwner:"مالك",mlLang:"English",mlNearme:"قربي",mlFavs:"محفوظ",mlRecents:"الأخيرة",mlMap:"خريطة",
   slProps:"عقار",slAreas:"منطقة",slAi:"مراجع بالذكاء",slKw:"الكويت فقط",
   esText:"استخدم البحث أعلاه للعثور على عقارك المثالي.",
   adminTitle:"👤 لوحة تحكم المالك",adminSub:"سجّل دخولك برقم هاتفك لإدارة إعلاناتك. يمكنك فقط تعديل أو حذف إعلاناتك الخاصة.",
@@ -663,11 +715,11 @@ function applyLang(){
   document.body.classList.toggle('ar',isAR);
   document.documentElement.setAttribute('lang',isAR?'ar':'en');
   document.documentElement.setAttribute('dir',isAR?'rtl':'ltr');
-  ['h-badge','hl-list','langBtn','nl-search','nl-featured','nl-owner','dt-search','dt-featured','dt-admin','dt-nearme','dt-favourites','splash-sub','ml-search','ml-featured','ml-list','ml-owner','ml-lang','ml-nearme','ml-favs','sl-props','sl-areas','sl-ai','sl-kw','es-text','admin-title','admin-sub'].forEach(id=>{
+  ['h-badge','hl-list','langBtn','nl-search','nl-featured','nl-owner','dt-search','dt-featured','dt-admin','dt-nearme','dt-favourites','dt-recents','dt-map','splash-sub','ml-search','ml-featured','ml-list','ml-owner','ml-lang','ml-nearme','ml-favs','ml-recents','ml-map','sl-props','sl-areas','sl-ai','sl-kw','es-text','admin-title','admin-sub'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){
       const key=id.replace(/-([a-z])/g,(_,c)=>c.toUpperCase()).replace('h-','').replace('nl-','nl').replace('dt-','dt').replace('ml-','ml').replace('sl-','sl');
-      const map={hBadge:'badge',hlList:'hlList',langBtn:'langBtn',nlSearch:'nlSearch',nlFeatured:'nlFeatured',nlOwner:'nlOwner',dtSearch:'dtSearch',dtFeatured:'dtFeatured',dtAdmin:'dtAdmin',dtNearme:'dtNearme',dtFavourites:'dtFavs',splashSub:'splashSub',mlSearch:'mlSearch',mlFeatured:'mlFeatured',mlList:'mlList',mlOwner:'mlOwner',mlLang:'mlLang',mlNearme:'mlNearme',mlFavs:'mlFavs',slProps:'slProps',slAreas:'slAreas',slAi:'slAi',slKw:'slKw',esText:'esText',adminTitle:'adminTitle',adminSub:'adminSub'};
+      const map={hBadge:'badge',hlList:'hlList',langBtn:'langBtn',nlSearch:'nlSearch',nlFeatured:'nlFeatured',nlOwner:'nlOwner',dtSearch:'dtSearch',dtFeatured:'dtFeatured',dtAdmin:'dtAdmin',dtNearme:'dtNearme',dtFavourites:'dtFavs',dtRecents:'dtRecents',dtMap:'dtMap',splashSub:'splashSub',mlSearch:'mlSearch',mlFeatured:'mlFeatured',mlList:'mlList',mlOwner:'mlOwner',mlLang:'mlLang',mlNearme:'mlNearme',mlFavs:'mlFavs',mlRecents:'mlRecents',mlMap:'mlMap',slProps:'slProps',slAreas:'slAreas',slAi:'slAi',slKw:'slKw',esText:'esText',adminTitle:'adminTitle',adminSub:'adminSub'};
       const tkey=map[key];if(tkey&&t[tkey])el.textContent=t[tkey];
     }
   });
@@ -691,8 +743,21 @@ function applyLang(){
   const fPurpEl=document.getElementById('f-purpose');if(fPurpEl){const po=fPurpEl.querySelectorAll('option');if(po[0])po[0].textContent=t.rentOrBuy;if(po[1])po[1].textContent=t.rent;if(po[2])po[2].textContent=t.buy;}
   // Chips
   const chips=document.querySelectorAll('.chip');const chipKeys=['chipBudget','chipVilla','chipStudio','chipSea','chipNear'];chips.forEach((c,i)=>{if(chipKeys[i]&&!c.onclick?.toString().includes('switchTab'))c.textContent=t[chipKeys[i]];});
+  // Price placeholders
+  const fPrMin=document.getElementById('f-price-min');if(fPrMin)fPrMin.placeholder=isAR?'أقل سعر KD':'Min KD';
+  const fPrMax=document.getElementById('f-price-max');if(fPrMax)fPrMax.placeholder=isAR?'أعلى سعر KD':'Max KD';
+  // Beds dropdown
+  const fBeds=document.getElementById('f-beds');
+  if(fBeds){const bo=fBeds.querySelectorAll('option');const bedLabels=isAR?['أي عدد غرف','استوديو','1+ غرفة','2+ غرفة','3+ غرف','4+ غرف','5+ غرف']:['Any Beds','Studio','1+ Bed','2+ Beds','3+ Beds','4+ Beds','5+ Beds'];bo.forEach((o,i)=>{if(bedLabels[i])o.textContent=bedLabels[i];});}
+  // Sort dropdown
+  const fSort=document.getElementById('f-sort');
+  if(fSort){const so=fSort.querySelectorAll('option');const sortLabels=isAR?['⭐ موصى به','💰 السعر: الأقل','💰 السعر: الأعلى','🆕 الأحدث أولاً','📅 الأقدم أولاً','🔥 الأكثر مشاهدة','👁 الأقل مشاهدة']:['⭐ Recommended','💰 Price: Low→High','💰 Price: High→Low','🆕 Newest First','📅 Oldest First','🔥 Most Viewed','👁 Least Viewed'];so.forEach((o,i)=>{if(sortLabels[i])o.textContent=sortLabels[i];});}
+  // Panel titles
+  const recTit=document.getElementById('recents-title');if(recTit)recTit.textContent=isAR?'🕐 شاهدت مؤخراً':'🕐 Recently Viewed';
+  const mapTit=document.getElementById('map-title');if(mapTit)mapTit.textContent=isAR?'🗺 خريطة العقارات':'🗺 Properties Map';
   // Re-render dynamic sections so they pick up new language
   if(document.getElementById('tab-favourites')&&document.getElementById('tab-favourites').style.display!=='none')renderFavourites();
+  if(document.getElementById('tab-recents')&&document.getElementById('tab-recents').style.display!=='none')renderRecents();
   renderFeatured();renderAdmin();
   if(document.getElementById('tab-nearme')&&document.getElementById('tab-nearme').style.display!=='none')startNearMe();
 }
@@ -732,6 +797,26 @@ function processCardPayment(){
   alert('✅ Payment of '+plan+' processed successfully!\n\nYour listing will be activated within 24 hours.\nA confirmation will be sent to your phone.');
 }
 
+function renderRecents(){
+  const el=document.getElementById('recents-list');if(!el)return;
+  const props=RECENTS.map(id=>PROPS.find(p=>p.id==id)).filter(Boolean);
+  if(!props.length){el.innerHTML=`<div class="recents-empty"><div style="font-size:40px">🕐</div><p>${isAR?'لا توجد عقارات مشاهدة مؤخراً.':'No recently viewed properties yet.'}</p></div>`;return;}
+  el.innerHTML=`<div class="section-hdr"><div class="section-title">${isAR?'🕐 شاهدت مؤخراً':'🕐 Recently Viewed'}</div><div class="section-count">${props.length}</div></div><div class="property-grid">`+props.map((p,i)=>renderCard(p,i)).join('')+'</div>';
+}
+function renderMap(){
+  const el=document.getElementById('map-leaflet');if(!el)return;
+  if(!_leafletMap){
+    _leafletMap=L.map('map-leaflet').setView([29.37,47.98],11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(_leafletMap);
+  }else{_leafletMap.invalidateSize();}
+  _leafletMap.eachLayer(l=>{if(l instanceof L.Marker)_leafletMap.removeLayer(l);});
+  const withLoc=PROPS.filter(p=>p.latitude&&p.longitude);
+  withLoc.forEach(p=>{
+    const marker=L.marker([parseFloat(p.latitude),parseFloat(p.longitude)]).addTo(_leafletMap);
+    marker.bindPopup(`<strong>${p.title}</strong><br>${p.area} · ${p.price}${p.period?' '+p.period:''}<br><button onclick="document.getElementById('tab-map').style.display='none';openModal(${p.id})" style="margin-top:6px;background:#0a1628;color:#c9a84c;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:700">View →</button>`);
+  });
+  if(withLoc.length){const lats=withLoc.map(p=>parseFloat(p.latitude));const lons=withLoc.map(p=>parseFloat(p.longitude));_leafletMap.fitBounds([[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]],{padding:[30,30]});}
+}
 function renderFavourites(){
   const el=document.getElementById('favourites-list');if(!el)return;
   const favProps=PROPS.filter(p=>FAVS.has(p.id));
@@ -888,8 +973,11 @@ function renderCard(p,i){
       <div class="card-tags">${(p.tags||[]).slice(0,3).map(t=>'<span class="card-tag">'+t.trim()+'</span>').join('')}</div>
       <div class="card-meta"><span>📍 ${p.area}${blk}</span><span>🛏 ${p.beds?p.beds+' '+t.bed:t.studio}</span><span>📐 ${p.sqm} m²</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <span style="font-size:11px;color:#aaa">${dateStr}</span>
-        <button onclick="event.stopPropagation();toggleFav(${p.id})" style="background:none;border:none;cursor:pointer;font-size:18px;padding:0;line-height:1" id="fav-btn-${p.id}">${isFav?'❤️':'🤍'}</button>
+        <span style="font-size:11px;color:#aaa">${dateStr}${VIEWS[p.id]?`<span class="card-views">👁 ${VIEWS[p.id]}</span>`:''}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="card-share-btn" onclick="event.stopPropagation();shareProperty(${p.id})" title="Share on WhatsApp">📤</button>
+          <button onclick="event.stopPropagation();toggleFav(${p.id})" style="background:none;border:none;cursor:pointer;font-size:18px;padding:0;line-height:1" id="fav-btn-${p.id}">${isFav?'❤️':'🤍'}</button>
+        </div>
       </div>
     </div>
   </div>`;
@@ -1153,26 +1241,51 @@ function showNearbyProps(userLat,userLon,isApprox){
 function openMapLink(lat,lon,title){
   window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lon}&query_place_id=${encodeURIComponent(title)}`,'_blank');
 }
+function getRecommendScore(p){return(p.featured?50:0)+getAIReview(p).score;}
+function applySort(arr,mode){
+  const top10=[...arr].sort((a,b)=>getRecommendScore(b)-getRecommendScore(a)).slice(0,10);
+  const top10ids=new Set(top10.map(p=>p.id));
+  const rest=arr.filter(p=>!top10ids.has(p.id));
+  const fn={'price-asc':(a,b)=>(a.price_num||0)-(b.price_num||0),'price-desc':(a,b)=>(b.price_num||0)-(a.price_num||0),'newest':(a,b)=>(a.days_ago||0)-(b.days_ago||0),'oldest':(a,b)=>(b.days_ago||0)-(a.days_ago||0),'most-viewed':(a,b)=>(VIEWS[b.id]||0)-(VIEWS[a.id]||0),'least-viewed':(a,b)=>(VIEWS[a.id]||0)-(VIEWS[b.id]||0)};
+  if(mode&&fn[mode])rest.sort(fn[mode]);
+  return[...top10,...rest];
+}
 function doSearch(){
   const q=document.getElementById('query').value.trim();
   const area=document.getElementById('f-area').value;
   const block=document.getElementById('f-block').value;
   const type=document.getElementById('f-type').value;
   const purpose=document.getElementById('f-purpose').value;
-  if(!q&&!area&&!block&&!type&&!purpose)return;
+  const priceMin=parseInt(document.getElementById('f-price-min').value)||0;
+  const priceMax=parseInt(document.getElementById('f-price-max').value)||0;
+  const beds=document.getElementById('f-beds').value;
+  const sortMode=document.getElementById('f-sort').value;
+  if(!q&&!area&&!block&&!type&&!purpose&&!priceMin&&!priceMax&&!beds)return;
   switchTab('search');
   let filtered=PROPS;
   if(area){const n=normArea(translateArabic(area));filtered=filtered.filter(p=>p.area&&(p.area.toLowerCase()===n.toLowerCase()||p.area===area));}
   if(block)filtered=filtered.filter(p=>p.block&&p.block.toString()===block.replace('Block ',''));
   if(type)filtered=filtered.filter(p=>p.type===type);
   if(purpose)filtered=filtered.filter(p=>p.purpose===purpose);
-  const matched=q?smartSearch(q,filtered):filtered.slice(0,8);
-  const srt=isAR?T.ar:T.en;const propWord=matched.length===1?srt.nmProperty:srt.nmProperties;const msg=matched.length>0?srt.srFound.replace('{n}',matched.length).replace('{prop}',propWord):srt.srNone;
-  document.getElementById('results').innerHTML=`<div class="ai-bubble"><div class="ai-icon">🤖</div><div><div class="ai-label">AI Assistant</div><div class="ai-text">${msg}</div></div></div>`+(matched.length?`<div class="section-hdr"><div class="section-title">${srt.srResults}</div><div class="section-count">${matched.length} ${propWord}</div></div><div class="property-grid">${matched.map((p,i)=>renderCard(p,i)).join('')}</div>`:'');
+  if(priceMin)filtered=filtered.filter(p=>(p.price_num||0)>=priceMin);
+  if(priceMax)filtered=filtered.filter(p=>(p.price_num||0)<=priceMax);
+  if(beds==='0')filtered=filtered.filter(p=>p.beds===0||p.type==='Studio');
+  else if(beds)filtered=filtered.filter(p=>(p.beds||0)>=parseInt(beds));
+  const matched=q?smartSearch(q,filtered):filtered;
+  const sorted=applySort(matched,sortMode);
+  const srt=isAR?T.ar:T.en;const propWord=sorted.length===1?srt.nmProperty:srt.nmProperties;const msg=sorted.length>0?srt.srFound.replace('{n}',sorted.length).replace('{prop}',propWord):srt.srNone;
+  document.getElementById('results').innerHTML=`<div class="ai-bubble"><div class="ai-icon">🤖</div><div><div class="ai-label">AI Assistant</div><div class="ai-text">${msg}</div></div></div>`+(sorted.length?`<div class="section-hdr"><div class="section-title">${srt.srResults}</div><div class="section-count">${sorted.length} ${propWord}</div></div><div class="property-grid">${sorted.map((p,i)=>renderCard(p,i)).join('')}</div>`:'');
 }
 
+function shareProperty(id){
+  const p=PROPS.find(x=>x.id==id);if(!p)return;
+  const msg=isAR?`شاهد هذا العقار على PinQ8:\n${p.title}\n${p.area} · ${p.price}${p.period?' / شهر':''}\nhttps://pinqwt.github.io/Pin-Finder-Kuwait/`:`Check out this property on PinQ8:\n${p.title}\n${p.area} · ${p.price}${p.period?' '+p.period:''}\nhttps://pinqwt.github.io/Pin-Finder-Kuwait/`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
 function openModal(id){
   const p=PROPS.find(x=>x.id==id);if(!p)return;
+  VIEWS[id]=(VIEWS[id]||0)+1;localStorage.setItem('pinq8_views',JSON.stringify(VIEWS));
+  RECENTS=RECENTS.filter(x=>x!==id);RECENTS.unshift(id);if(RECENTS.length>20)RECENTS=RECENTS.slice(0,20);localStorage.setItem('pinq8_recents',JSON.stringify(RECENTS));
   const bg=getBg(p.type);const ai=getAIReview(p);
   const imgHtml=p.photo_url?`<img class="modal-user-img" src="${p.photo_url}" alt="${p.title}" onerror="this.style.display='none'">`:`<div class="modal-img-bg" style="background-image:url('${bg}')"></div><div class="modal-img-overlay"></div><div class="modal-img-emoji">${p.emoji||'🏠'}</div>`;
   const phone=p.customer_phone||'—';const blk=p.block?` · Block ${p.block}`:'';
@@ -1187,11 +1300,14 @@ function closeSubmit(e){if(e.target===document.getElementById('submitModal'))doc
 function closeTerminal(e){if(e.target===document.getElementById('terminalModal'))document.getElementById('terminalModal').classList.remove('open');}
 
 function switchTab(tab){
-  ['search','featured','nearme','admin','favourites'].forEach(t=>{
-    const el=document.getElementById('tab-'+t);if(el)el.style.display=t===tab?'block':'none'; if(t==='favourites'&&t===tab)renderFavourites();
-    const d=document.getElementById('dt-'+(t==='admin'?'admin':t==='nearme'?'nearme':t));if(d)d.classList.toggle('active',t===tab);
+  ['search','featured','nearme','admin','favourites','recents','map'].forEach(t=>{
+    const el=document.getElementById('tab-'+t);if(el)el.style.display=t===tab?'block':'none';
+    if(t==='favourites'&&t===tab)renderFavourites();
+    if(t==='recents'&&t===tab)renderRecents();
+    if(t==='map'&&t===tab)renderMap();
+    const d=document.getElementById('dt-'+t);if(d)d.classList.toggle('active',t===tab);
     const n=document.getElementById('nl-'+(t==='admin'?'owner':t==='featured'?'featured':t==='nearme'?'nearme':'search'));if(n)n.classList.toggle('active',t===tab);
-    const m=document.getElementById('mnav-'+(t==='admin'?'admin':t));if(m)m.classList.toggle('active',t===tab);
+    const m=document.getElementById('mnav-'+t);if(m)m.classList.toggle('active',t===tab);
   });
   if(tab==='nearme')startNearMe();
 }
@@ -1265,6 +1381,11 @@ function openSubmit(editProp=null){
     </div>
     <div class="payment-section">
       <h4>${ft.formPayTitle}</h4>
+      <div class="pay-method-row">
+        <button class="pay-method-btn active" id="pay-btn-bank" onclick="selectPayMethod('bank')">🏦 ${isAR?'تحويل بنكي':'Bank Transfer'}</button>
+        <button class="pay-method-btn" id="pay-btn-wamd" onclick="selectPayMethod('wamd')"><img src="https://i.imgur.com/0y5LkPJ.png" onerror="this.style.display='none'" style="height:16px;vertical-align:middle;margin-right:4px">WAMD</button>
+      </div>
+      <div id="pay-bank-section">
       <div class="bank-details">
         <strong>${ft.formPayTo}</strong><br>
         ${ft.formPayIBAN} <div class="bank-acc">KW81NBOK0000000000002046599572</div>
@@ -1272,6 +1393,18 @@ function openSubmit(editProp=null){
           <div style="font-size:14px;font-weight:800;color:#92400e;margin-bottom:4px">${ft.formPayNote}</div>
           ${ft.formPayNoteBody}
         </div>
+      </div>
+      </div>
+      <div id="pay-wamd-section" style="display:none">
+      <div class="bank-details">
+        <strong>${isAR?'حوّل إلى PinQ8 عبر WAMD:':'Pay to PinQ8 via WAMD:'}</strong><br>
+        <div class="bank-acc" style="font-size:22px;letter-spacing:2px;margin:10px 0">97656372</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">${isAR?'رقم هاتف WAMD':'WAMD phone number'}</div>
+        <div style="background:#e8f4ff;border:1.5px solid #3b82f6;border-radius:10px;padding:12px 14px;font-size:13px;color:#1e3a5f;line-height:1.7">
+          <div style="font-size:14px;font-weight:800;margin-bottom:4px">⚡ ${isAR?'مهم — اقرأ قبل التحويل':'Important — Read Before Paying'}</div>
+          ${isAR?'بعد الإرسال ستحصل على <strong>كود مرجعي فريد</strong> (مثال: PIN-1234).<br><strong>استخدمه كملاحظة التحويل في WAMD</strong> حتى نتحقق من دفعتك فوراً.':'After submitting you\'ll receive a <strong>unique reference code</strong> (e.g. PIN-1234).<br><strong>Use it as the WAMD transfer note</strong> so we can verify your payment instantly.'}
+        </div>
+      </div>
       </div>
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px">${ft.formPayContact}</div>
@@ -1334,6 +1467,13 @@ function openSubmit(editProp=null){
   document.getElementById('submitModal').classList.add('open');
 }
 
+function selectPayMethod(method){
+  selectedPay=method;
+  document.getElementById('pay-btn-bank').classList.toggle('active',method==='bank');
+  document.getElementById('pay-btn-wamd').classList.toggle('active',method==='wamd');
+  document.getElementById('pay-bank-section').style.display=method==='bank'?'block':'none';
+  document.getElementById('pay-wamd-section').style.display=method==='wamd'?'block':'none';
+}
 function selectPlan(plan){
   selectedPlan=plan;
   ['starter-mo','standard-mo','pro-mo','starter-yr','standard-yr','pro-yr'].forEach(p=>{
