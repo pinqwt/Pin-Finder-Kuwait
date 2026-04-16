@@ -301,8 +301,8 @@ footer span{color:var(--gold);}
   <div class="mobile-nav-inner">
     <button class="mnav-btn active" onclick="switchTab('search')" id="mnav-search"><span class="icon">🔍</span><span id="ml-search">Search</span></button>
     <button class="mnav-btn" onclick="switchTab('featured')" id="mnav-featured"><span class="icon">⭐</span><span id="ml-featured">Featured</span></button>
-    <button class="mnav-btn" onclick="switchTab('favourites')" id="mnav-favourites"><span class="icon">❤️</span><span>Saved</span></button>
-    <button class="mnav-btn" onclick="switchTab('nearme')" id="mnav-nearme"><span class="icon">📍</span><span>Near Me</span></button>
+    <button class="mnav-btn" onclick="switchTab('favourites')" id="mnav-favourites"><span class="icon">❤️</span><span id="ml-favs">Saved</span></button>
+    <button class="mnav-btn" onclick="switchTab('nearme')" id="mnav-nearme"><span class="icon">📍</span><span id="ml-nearme">Near Me</span></button>
     <button class="mnav-btn mnav-list" onclick="openSubmit()"><span id="ml-list">+ List</span></button>
     <button class="mnav-btn" onclick="switchTab('admin')" id="mnav-admin"><span class="icon">👤</span><span id="ml-owner">Owner</span></button>
     <button class="mnav-btn" onclick="toggleLang()"><span class="icon">🌐</span><span id="ml-lang">عربي</span></button>
@@ -663,11 +663,11 @@ function applyLang(){
   document.body.classList.toggle('ar',isAR);
   document.documentElement.setAttribute('lang',isAR?'ar':'en');
   document.documentElement.setAttribute('dir',isAR?'rtl':'ltr');
-  ['h-badge','hl-list','langBtn','nl-search','nl-featured','nl-owner','dt-search','dt-featured','dt-admin','splash-sub','ml-search','ml-featured','ml-list','ml-owner','ml-lang','sl-props','sl-areas','sl-ai','sl-kw','es-text','admin-title','admin-sub'].forEach(id=>{
+  ['h-badge','hl-list','langBtn','nl-search','nl-featured','nl-owner','dt-search','dt-featured','dt-admin','dt-nearme','dt-favourites','splash-sub','ml-search','ml-featured','ml-list','ml-owner','ml-lang','ml-nearme','ml-favs','sl-props','sl-areas','sl-ai','sl-kw','es-text','admin-title','admin-sub'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){
       const key=id.replace(/-([a-z])/g,(_,c)=>c.toUpperCase()).replace('h-','').replace('nl-','nl').replace('dt-','dt').replace('ml-','ml').replace('sl-','sl');
-      const map={hBadge:'badge',hlList:'hlList',langBtn:'langBtn',nlSearch:'nlSearch',nlFeatured:'nlFeatured',nlOwner:'nlOwner',dtSearch:'dtSearch',dtFeatured:'dtFeatured',dtAdmin:'dtAdmin',splashSub:'splashSub',mlSearch:'mlSearch',mlFeatured:'mlFeatured',mlList:'mlList',mlOwner:'mlOwner',mlLang:'mlLang',slProps:'slProps',slAreas:'slAreas',slAi:'slAi',slKw:'slKw',esText:'esText',adminTitle:'adminTitle',adminSub:'adminSub'};
+      const map={hBadge:'badge',hlList:'hlList',langBtn:'langBtn',nlSearch:'nlSearch',nlFeatured:'nlFeatured',nlOwner:'nlOwner',dtSearch:'dtSearch',dtFeatured:'dtFeatured',dtAdmin:'dtAdmin',dtNearme:'dtNearme',dtFavourites:'dtFavs',splashSub:'splashSub',mlSearch:'mlSearch',mlFeatured:'mlFeatured',mlList:'mlList',mlOwner:'mlOwner',mlLang:'mlLang',mlNearme:'mlNearme',mlFavs:'mlFavs',slProps:'slProps',slAreas:'slAreas',slAi:'slAi',slKw:'slKw',esText:'esText',adminTitle:'adminTitle',adminSub:'adminSub'};
       const tkey=map[key];if(tkey&&t[tkey])el.textContent=t[tkey];
     }
   });
@@ -883,7 +883,7 @@ function renderCard(p,i){
     ${featBadge}
     <div class="card-img">${imgHtml}</div>
     <div class="card-body">
-      <div class="card-price">${p.price} <span>${p.period||''}</span></div>
+      <div class="card-price">${p.price} <span>${p.period?(isAR?'/ شهر':p.period):''}</span></div>
       <div class="card-title">${p.title}</div>
       <div class="card-tags">${(p.tags||[]).slice(0,3).map(t=>'<span class="card-tag">'+t.trim()+'</span>').join('')}</div>
       <div class="card-meta"><span>📍 ${p.area}${blk}</span><span>🛏 ${p.beds?p.beds+' '+t.bed:t.studio}</span><span>📐 ${p.sqm} m²</span></div>
@@ -1131,7 +1131,7 @@ function showNearbyProps(userLat,userLon,isApprox){
         <div style="position:absolute;top:44px;left:12px;background:rgba(10,22,40,0.85);color:${locBadge};font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;z-index:2">📍 ${dist}</div>
         <div class="card-img">${imgHtml}</div>
         <div class="card-body">
-          <div class="card-price">${p.price} <span>${p.period||''}</span></div>
+          <div class="card-price">${p.price} <span>${p.period?(isAR?'/ شهر':p.period):''}</span></div>
           <div class="card-title">${p.title}</div>
           <div class="card-tags">${(p.tags||[]).slice(0,3).map(t=>'<span class="card-tag">'+t.trim()+'</span>').join('')}</div>
           <div class="card-meta">
