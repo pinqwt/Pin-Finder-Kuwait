@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pinqwt.github.io/Pin-Finder-Kuwait/sitemap.xml
