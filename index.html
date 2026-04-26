@@ -305,17 +305,6 @@ body.ar .filters-row2{direction:rtl;}
 .pay-method-btn{flex:1;padding:10px;border:2px solid var(--border);border-radius:12px;background:white;cursor:pointer;font-size:13px;font-weight:700;color:var(--muted);text-align:center;transition:all .2s;}
 .pay-method-btn.active{border-color:var(--gold);background:var(--cream2);color:var(--navy);}
 /* VIEWS BADGE */
-
-/* FREE COUNTDOWN */
-.free-banner{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-size:13px;font-weight:700;padding:8px 18px;border-radius:30px;margin-bottom:1.2rem;box-shadow:0 4px 18px rgba(22,163,74,0.35);animation:pulse-green 2s infinite;}
-@keyframes pulse-green{0%,100%{box-shadow:0 4px 18px rgba(22,163,74,0.35);}50%{box-shadow:0 4px 28px rgba(22,163,74,0.65);}}
-.free-form-banner{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:14px;padding:16px 20px;margin-bottom:20px;text-align:center;}
-.free-form-banner .spots-num{font-size:36px;font-weight:900;display:block;line-height:1;}
-.free-form-banner .spots-lbl{font-size:13px;opacity:0.9;margin-top:2px;}
-.free-plan-card{border:2.5px solid #16a34a;border-radius:16px;padding:20px;text-align:center;background:linear-gradient(135deg,#f0fdf4,#dcfce7);margin-bottom:16px;}
-.free-plan-card .free-price{font-size:42px;font-weight:900;color:#15803d;}
-.free-plan-card .free-sub{font-size:13px;color:#166534;margin-top:4px;}
-
 .card-views{font-size:10px;color:var(--muted);margin-left:4px;}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -373,7 +362,6 @@ body.ar .filters-row2{direction:rtl;}
   <div class="hero-content">
     <div class="hero-badge">🇰🇼 <span id="h-badge">PinQ8 — Kuwait's #1 Property Platform</span></div>
     <h1 class="hero-title" id="h-title">Find Your <span>Dream Home</span><br>in Kuwait</h1>
-    <div class="free-banner" id="free-countdown" style="display:none">🎉 <span id="spots-count">100</span>&nbsp;<span id="spots-lbl-hero">free spots left out of 100!</span></div>
     <p class="hero-sub" id="h-sub">Search thousands of verified properties across all areas of Kuwait. Rent or buy with confidence.</p>
     <div class="search-box">
       <div class="search-input-row">
@@ -503,7 +491,7 @@ body.ar .filters-row2{direction:rtl;}
 const SUPABASE_URL='https://qhebhvllkovfbkqrcnmm.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFoZWJodmxsa292ZmJrcXJjbm1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNTgwMTksImV4cCI6MjA5MTYzNDAxOX0.AQl5WAB1_ma3zcrkW4NFKk6oCKBUlTthD68ujcSlnas';
 const ADMIN_PASS='Hkerba150815';
-let PROPS=[],DB_PROPS_COUNT=0,isAR=false,selectedPlan='monthly',selectedPay='bank',selectedPhoto='';
+let PROPS=[],isAR=false,selectedPlan='monthly',selectedPay='bank',selectedPhoto='';
 let terminalAuthed=false;
 let VIEWS=JSON.parse(localStorage.getItem('pinq8_views')||'{}');
 let RECENTS=JSON.parse(localStorage.getItem('pinq8_recents')||'[]');
@@ -935,11 +923,6 @@ async function loadProperties(){
       const dbProps=data.map(p=>({...p,tags:p.tags?p.tags.split(','):[],days_ago:p.days_ago||0,featured:p.featured||false,price_num:parseInt((p.price||'').replace(/[^\d]/g,''))||0}));
       const staticPropsMapped=typeof STATIC_PROPS!=='undefined'?STATIC_PROPS.map(p=>({...p,tags:Array.isArray(p.tags)?p.tags:p.tags?p.tags.split(','):[],_static:true})):[];
       PROPS=[...dbProps,...staticPropsMapped];
-      DB_PROPS_COUNT=dbProps.length;
-      const _sl=Math.max(15,100-DB_PROPS_COUNT);
-      const _fc=document.getElementById('free-countdown');if(_fc)_fc.style.display=DB_PROPS_COUNT<100?'inline-flex':'none';
-      const _sc=document.getElementById('spots-count');if(_sc)_sc.textContent=_sl;
-      const _sh=document.getElementById('spots-lbl-hero');if(_sh)_sh.textContent=isAR?'مقعد مجاني متبقي من 100!':'free spots left out of 100!';
       document.getElementById('stat-props').textContent=(PROPS.length>999?Math.floor(PROPS.length/1000)+'K':Math.floor(PROPS.length/100)*100)+'+';
       document.getElementById('results').innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><p>'+(isAR?T.ar.esText:T.en.esText)+'</p></div>';
       renderFeatured();renderAdmin();initSearchAreaPicker();
@@ -1352,53 +1335,51 @@ function openSubmit(editProp=null){
     <h2>${isEdit?ft.formTitleEdit:ft.formTitle}</h2>
     <p class="sub">${isEdit?ft.formSubEdit:ft.formSub}</p>
     ${!isEdit?`
-    ${DB_PROPS_COUNT<100?`
-    <div class="free-form-banner">
-      <span class="spots-num">${Math.max(15,100-DB_PROPS_COUNT)}</span>
-      <div class="spots-lbl">${isAR?'مقعد مجاني متبقٍ من أصل 100 — أضف عقارك الآن مجاناً!':'free spots left out of 100 — list your property now for FREE!'}</div>
-    </div>
-    <div class="free-plan-card">
-      <div class="free-price">FREE</div>
-      <div class="free-sub">${isAR?'✅ إعلانك الأول مجاناً — ضمن أول 100 عقار':'✅ Your first listing is completely free — first 100 spots only'}</div>
-    </div>`:`
     <div style="margin-bottom:10px;font-size:13px;font-weight:700;color:var(--navy)">${ft.formPlan}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px" id="plan-grid">
+
       <div class="pricing-card selected" id="plan-starter-mo" onclick="selectPlan('starter-mo')">
         <div class="plan-name">${ft.planStarter}</div>
         <div class="plan-price">5 <span>KWD/mo</span></div>
         <div class="plan-desc">${ft.plan1listing}<br>${ft.planMonthly}</div>
       </div>
+
       <div class="pricing-card" id="plan-standard-mo" onclick="selectPlan('standard-mo')">
         <div class="plan-name">${ft.planStandard}</div>
         <div class="plan-price">9 <span>KWD/mo</span></div>
         <div class="plan-desc">${ft.plan2listings}<br>${ft.planMonthly}</div>
       </div>
+
       <div class="pricing-card" id="plan-pro-mo" onclick="selectPlan('pro-mo')">
         <div class="best-val">${ft.bestVal}</div>
         <div class="plan-name">${ft.planPro}</div>
         <div class="plan-price">20 <span>KWD/mo</span></div>
         <div class="plan-desc">${ft.plan5listings}<br>${ft.planMonthly}</div>
       </div>
+
       <div class="pricing-card" id="plan-starter-yr" onclick="selectPlan('starter-yr')">
         <div class="save-badge">Save 10 KWD</div>
         <div class="plan-name">${ft.planStarter}</div>
         <div class="plan-price">50 <span>KWD/yr</span></div>
         <div class="plan-desc">${ft.plan1listing}<br>${ft.planYearly}</div>
       </div>
+
       <div class="pricing-card" id="plan-standard-yr" onclick="selectPlan('standard-yr')">
         <div class="save-badge">Save 13 KWD</div>
         <div class="plan-name">${ft.planStandard}</div>
         <div class="plan-price">95 <span>KWD/yr</span></div>
         <div class="plan-desc">${ft.plan2listings}<br>${ft.planYearly}</div>
       </div>
+
       <div class="pricing-card" id="plan-pro-yr" onclick="selectPlan('pro-yr')">
         <div class="save-badge">Save 10 KWD</div>
         <div class="plan-name">${ft.planPro}</div>
         <div class="plan-price">230 <span>KWD/yr</span></div>
         <div class="plan-desc">${ft.plan5listings}<br>${ft.planYearly}</div>
       </div>
-    </div>`}
-    ${DB_PROPS_COUNT<100?'':`<div class="payment-section">
+
+    </div>
+    <div class="payment-section">
       <h4>${ft.formPayTitle}</h4>
       <div class="pay-method-row">
         <button class="pay-method-btn active" id="pay-btn-bank" onclick="selectPayMethod('bank')">🏦 ${isAR?'تحويل بنكي':'Bank Transfer'}</button>
@@ -1481,7 +1462,7 @@ function openSubmit(editProp=null){
       <div class="photo-upload" onclick="document.getElementById('photoInput').click()">${ft.fPhotoClick}<input type="file" id="photoInput" accept="image/*" style="display:none" onchange="previewPhoto(event)"></div>
       <img id="photoPreview" class="photo-preview" ${editProp&&editProp.photo_url?'src="'+editProp.photo_url+'" style="display:block"':''}>
     </div>
-    <button class="submit-btn" id="plan-submit-btn" onclick="submitProperty(${isEdit?editProp.id:'null'})">${isEdit?(isAR?ft.fUpdate:'Save Changes'):(DB_PROPS_COUNT<100?(isAR?'أضف عقارك مجاناً ✅':'Submit for FREE ✅'):'Submit & Pay')}</button>
+    <button class="submit-btn" id="plan-submit-btn" onclick="submitProperty(${isEdit?editProp.id:'null'})">${isEdit?'Save Changes':'Submit — 5 KWD/mo (1 listing)'}</button>
     <button class="cancel-btn" onclick="document.getElementById('submitModal').classList.remove('open')">Cancel</button>`;
   document.getElementById('submitModal').classList.add('open');
 }
@@ -1502,7 +1483,7 @@ function selectPlan(plan){
   // Update submit button label
   const labels={'starter-mo':'Submit — 5 KWD/mo (1 listing)','standard-mo':'Submit — 9 KWD/mo (2 listings)','pro-mo':'Submit — 20 KWD/mo (5 listings)','starter-yr':'Submit — 50 KWD/yr (1 listing)','standard-yr':'Submit — 95 KWD/yr (2 listings)','pro-yr':'Submit — 230 KWD/yr (5 listings)'};
   const btn=document.getElementById('plan-submit-btn');
-  if(btn)btn.textContent=DB_PROPS_COUNT<100?(isAR?'أضف عقارك مجاناً ✅':'Submit for FREE ✅'):(labels[plan]||'Submit Listing');
+  if(btn)btn.textContent=labels[plan]||'Submit Listing';
 }
 
 // selectPay removed - bank transfer only
