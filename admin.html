@@ -714,14 +714,19 @@ const db = (SUPABASE_URL !== 'YOUR_SUPABASE_URL')
   ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 /* ── AUTH ───────────────────────────────────────────────── */
-const ADMIN_USER = 'cafe';
-const ADMIN_PASS = 'Kuw963258';
+const ACCOUNTS = [
+  { user: 'cafe',       pass: 'Kuw963258', role: 'admin' },
+  { user: 'cafe15',     pass: 'Kuw963258', role: 'admin' },
+  { user: 'ultimate15', pass: 'Zahab2011', role: 'superadmin' },
+];
 
 function doLogin(){
   const u = document.getElementById('lu').value.trim();
   const p = document.getElementById('lp').value;
-  if(u===ADMIN_USER && p===ADMIN_PASS){
+  const match = ACCOUNTS.find(a => a.user === u && a.pass === p);
+  if(match){
     sessionStorage.setItem('cafe_admin','1');
+    sessionStorage.setItem('cafe_role', match.role);
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='block';
     initApp();
@@ -731,6 +736,7 @@ function doLogin(){
 }
 function logout(){
   sessionStorage.removeItem('cafe_admin');
+  sessionStorage.removeItem('cafe_role');
   location.reload();
 }
 if(sessionStorage.getItem('cafe_admin')==='1'){
