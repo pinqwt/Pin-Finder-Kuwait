@@ -966,8 +966,47 @@ const db = (SUPABASE_URL !== 'YOUR_SUPABASE_URL')
   ? createClient(SUPABASE_URL, SUPABASE_KEY)
   : null;
 
+/* ── MAINTENANCE CHECK ───────────────────────────────────────── */
+if(localStorage.getItem('site_enabled') === 'false'){
+  document.body.innerHTML = `
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{
+        font-family:'Inter',sans-serif;
+        background:#1C0A00;
+        min-height:100vh;
+        display:flex;align-items:center;justify-content:center;
+        text-align:center;padding:2rem;
+      }
+      .m-wrap{max-width:480px}
+      .m-cup{font-size:80px;margin-bottom:24px;animation:float 2s ease-in-out infinite}
+      @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+      .m-title{
+        font-family:'Georgia',serif;
+        font-size:2.8rem;font-weight:800;
+        color:#FDF6EC;letter-spacing:-1px;margin-bottom:10px;
+      }
+      .m-title em{color:#C68642;font-style:normal}
+      .m-ar{font-size:1.2rem;color:#D4A96A;margin-bottom:20px;direction:rtl}
+      .m-msg{color:rgba(253,246,236,.65);font-size:16px;line-height:1.75;margin-bottom:32px}
+      .m-badge{
+        display:inline-block;
+        background:rgba(198,132,66,.15);border:1px solid rgba(198,132,66,.35);
+        color:#D4A96A;padding:8px 22px;border-radius:999px;
+        font-size:13px;font-weight:600;letter-spacing:.5px;
+      }
+    </style>
+    <div class="m-wrap">
+      <div class="m-cup">☕</div>
+      <div class="m-title">Arabica <em>Coffee House</em></div>
+      <div class="m-ar">بيت القهوة العربية</div>
+      <p class="m-msg">We're taking a short break to make things even better for you.<br>We'll be back very soon!</p>
+      <span class="m-badge">🔧 Back Soon — نعود قريباً</span>
+    </div>`;
+}
+
 /* ── SPLASH ─────────────────────────────────────────────────── */
-setTimeout(() => document.getElementById('splash').classList.add('hide'), 2800);
+setTimeout(() => document.getElementById('splash')?.classList.add('hide'), 2800);
 
 /* ── NAV SCROLL ─────────────────────────────────────────────── */
 window.addEventListener('scroll', () => {

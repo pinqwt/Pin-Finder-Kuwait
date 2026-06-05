@@ -415,6 +415,62 @@ tr:hover td{background:var(--cream)}
 }
 .empty-ico{font-size:56px;margin-bottom:16px}
 
+/* ═══════════════════════ SETTINGS ═══════════════════════ */
+.settings-grid{display:flex;flex-direction:column;gap:20px}
+.setting-card{
+  background:white;border:1.5px solid var(--border);
+  border-radius:var(--r-lg);padding:28px 32px;
+  box-shadow:var(--sh-sm);
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+  flex-wrap:wrap;
+}
+.setting-card.danger{border-color:#FCA5A5}
+.setting-info h3{font-size:16px;font-weight:700;color:var(--espresso);margin-bottom:5px}
+.setting-info p{font-size:13px;color:var(--muted);max-width:420px;line-height:1.6}
+/* TOGGLE SWITCH */
+.toggle-wrap{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.toggle-label{font-size:13px;font-weight:700;color:var(--muted)}
+.toggle{
+  position:relative;width:56px;height:30px;cursor:pointer;
+}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{
+  position:absolute;inset:0;background:#D1D5DB;border-radius:999px;
+  transition:background .3s;
+}
+.toggle input:checked ~ .toggle-track{background:var(--green)}
+.toggle-thumb{
+  position:absolute;top:3px;left:3px;
+  width:24px;height:24px;background:white;
+  border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.2);
+  transition:transform .3s;
+}
+.toggle input:checked ~ .toggle-thumb{transform:translateX(26px)}
+/* ACCOUNT CARDS */
+.account-cards{display:flex;flex-direction:column;gap:14px;margin-top:4px;width:100%}
+.acct-row{
+  display:flex;align-items:center;gap:16px;
+  background:var(--cream);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:16px 20px;
+  flex-wrap:wrap;
+}
+.acct-avatar{
+  width:42px;height:42px;border-radius:999px;
+  background:linear-gradient(135deg,var(--roast),var(--bark));
+  color:var(--cream);display:flex;align-items:center;
+  justify-content:center;font-size:18px;font-weight:800;
+  flex-shrink:0;
+}
+.acct-info{flex:1}
+.acct-name{font-weight:700;color:var(--espresso);font-size:15px}
+.acct-role{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.6px;margin-top:2px;
+}
+.role-superadmin{color:var(--caramel)}
+.role-admin{color:var(--blue)}
+.acct-disabled .acct-name{color:var(--muted);text-decoration:line-through}
+
 /* ═══════════════════════ RESPONSIVE ═══════════════════════ */
 @media(max-width:760px){
   .sidebar{display:none}
@@ -468,6 +524,7 @@ tr:hover td{background:var(--cream)}
       <button class="sitem" onclick="nav('cats',this)"><span class="ico">🏷️</span> Categories</button>
       <div class="sidebar-section">Operations</div>
       <button class="sitem" onclick="nav('orders',this)"><span class="ico">📋</span> Orders</button>
+      <button class="sitem" onclick="nav('settings',this)"><span class="ico">⚙️</span> Settings</button>
       <div class="sidebar-section" style="margin-top:auto"></div>
       <button class="sitem" onclick="window.open('index.html','_blank')"><span class="ico">🌐</span> View Site</button>
     </div>
@@ -592,6 +649,44 @@ tr:hover td{background:var(--cream)}
         </div>
         <div class="order-cards" id="orders-list">
           <div class="empty"><div class="empty-ico">📋</div><p>Loading…</p></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="page" id="pg-settings">
+        <div class="sec-hdr">
+          <div>
+            <div class="sec-title">Settings</div>
+            <div class="sec-sub">Control website and admin access</div>
+          </div>
+        </div>
+        <div class="settings-grid">
+
+          <!-- WEBSITE TOGGLE -->
+          <div class="setting-card">
+            <div class="setting-info">
+              <h3>🌐 Website Status</h3>
+              <p>Turn the website on or off. When disabled, visitors will see a "Coming Soon" maintenance page instead of the café menu.</p>
+            </div>
+            <div class="toggle-wrap">
+              <span class="toggle-label" id="site-toggle-label">Online</span>
+              <label class="toggle">
+                <input type="checkbox" id="site-toggle" onchange="toggleSite(this.checked)" checked />
+                <span class="toggle-track"></span>
+                <span class="toggle-thumb"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- ADMIN ACCOUNTS — only ultimate15 sees this -->
+          <div class="setting-card" id="accounts-card" style="display:none;flex-direction:column;align-items:flex-start">
+            <div class="setting-info" style="margin-bottom:20px">
+              <h3>👥 Admin Accounts</h3>
+              <p>Enable or disable admin profiles. Super admin account cannot be disabled.</p>
+            </div>
+            <div class="account-cards" id="accounts-list"></div>
+          </div>
+
         </div>
       </div>
 
@@ -725,12 +820,20 @@ function doLogin(){
   const p = document.getElementById('lp').value;
   const match = ACCOUNTS.find(a => a.user === u && a.pass === p);
   if(match){
+    const disabled = localStorage.getItem(`account_${u}_enabled`) === 'false';
+    if(disabled){
+      const err = document.getElementById('lerr');
+      err.textContent = 'This account has been disabled.';
+      err.style.display = 'block';
+      return;
+    }
     sessionStorage.setItem('cafe_admin','1');
     sessionStorage.setItem('cafe_role', match.role);
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='block';
     initApp();
   } else {
+    document.getElementById('lerr').textContent = 'Incorrect username or password.';
     document.getElementById('lerr').style.display='block';
   }
 }
@@ -752,10 +855,82 @@ function nav(page, btn){
   document.querySelectorAll('.sitem').forEach(s=>s.classList.remove('on'));
   document.getElementById('pg-'+page).classList.add('on');
   if(btn) btn.classList.add('on');
-  if(page==='menu') loadItems();
-  if(page==='cats') loadCats();
-  if(page==='orders') loadOrders();
+  if(page==='menu')     loadItems();
+  if(page==='cats')     loadCats();
+  if(page==='orders')   loadOrders();
+  if(page==='settings') loadSettings();
 }
+
+/* ── SETTINGS ────────────────────────────────────────────── */
+function loadSettings(){
+  // Website toggle
+  const siteOn = localStorage.getItem('site_enabled') !== 'false';
+  const tog = document.getElementById('site-toggle');
+  tog.checked = siteOn;
+  document.getElementById('site-toggle-label').textContent = siteOn ? 'Online' : 'Offline';
+
+  // Accounts section — only super admin
+  const role = sessionStorage.getItem('cafe_role');
+  const card = document.getElementById('accounts-card');
+  if(role === 'superadmin'){
+    card.style.display = 'flex';
+    renderAccounts();
+  } else {
+    card.style.display = 'none';
+  }
+}
+
+function toggleSite(enabled){
+  localStorage.setItem('site_enabled', enabled ? 'true' : 'false');
+  document.getElementById('site-toggle-label').textContent = enabled ? 'Online' : 'Offline';
+  toast(enabled ? 'Website is now ONLINE ✓' : 'Website is now OFFLINE — maintenance mode');
+}
+
+function renderAccounts(){
+  const list = document.getElementById('accounts-list');
+  const managed = [
+    { user:'cafe',       role:'admin',      initial:'C' },
+    { user:'cafe15',     role:'admin',      initial:'C' },
+    { user:'ultimate15', role:'superadmin', initial:'U' },
+  ];
+  list.innerHTML = managed.map(a => {
+    const key = `account_${a.user}_enabled`;
+    const enabled = localStorage.getItem(key) !== 'false';
+    const isSelf  = a.role === 'superadmin';
+    return `
+    <div class="acct-row ${!enabled ? 'acct-disabled' : ''}" id="acct-row-${a.user}">
+      <div class="acct-avatar">${a.initial}</div>
+      <div class="acct-info">
+        <div class="acct-name">${a.user}</div>
+        <div class="acct-role role-${a.role}">${a.role === 'superadmin' ? '⭐ Super Admin' : '🔑 Admin'}</div>
+      </div>
+      ${isSelf
+        ? `<span style="font-size:12px;color:var(--muted);font-style:italic">Cannot disable own account</span>`
+        : `<div class="toggle-wrap">
+             <span class="toggle-label">${enabled ? 'Enabled' : 'Disabled'}</span>
+             <label class="toggle">
+               <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleAccount('${a.user}',this.checked)" />
+               <span class="toggle-track"></span>
+               <span class="toggle-thumb"></span>
+             </label>
+           </div>`
+      }
+    </div>`;
+  }).join('');
+}
+
+function toggleAccount(username, enabled){
+  localStorage.setItem(`account_${username}_enabled`, enabled ? 'true' : 'false');
+  // Update label
+  const row = document.getElementById(`acct-row-${username}`);
+  if(row){
+    row.classList.toggle('acct-disabled', !enabled);
+    const lbl = row.querySelector('.toggle-label');
+    if(lbl) lbl.textContent = enabled ? 'Enabled' : 'Disabled';
+  }
+  toast(`${username} is now ${enabled ? 'enabled' : 'disabled'}`);
+}
+
 
 /* ── INIT ────────────────────────────────────────────────── */
 async function initApp(){
