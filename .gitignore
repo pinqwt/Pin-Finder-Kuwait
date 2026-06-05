@@ -1,0 +1,24 @@
+# Dev files
+*.py
+*.zip
+*.reg
+*.mp4
+
+# Temp/preview images
+crop_preview.jpg
+current_state.jpg
+preview_grid.png
+products.png
+products2.png
+products3.png
+products4.png
+products5.png
+products6.png
+images.jpg
+
+# CSV templates
+*.csv
+*.sql
+
+# Scraped pages
+Power Tool Image*
