@@ -530,7 +530,7 @@ tr:hover td{background:var(--cream)}
     <div class="sidebar">
       <div class="sidebar-section">Main</div>
       <button class="sitem on" onclick="nav('dashboard',this)"><span class="ico">📊</span> Dashboard</button>
-      <button class="sitem" onclick="nav('menu',this)"><span class="ico">☕</span> Menu Items</button>
+      <button class="sitem" onclick="nav('menu',this)"><span class="ico">💄</span> Products</button>
       <button class="sitem" onclick="nav('cats',this)"><span class="ico">🏷️</span> Categories</button>
       <div class="sidebar-section">Operations</div>
       <button class="sitem" onclick="nav('orders',this)"><span class="ico">📋</span> Orders</button>
@@ -557,7 +557,7 @@ tr:hover td{background:var(--cream)}
               <span class="scard-trend tr-up">Live</span>
             </div>
             <div class="scard-num" id="ds-items">–</div>
-            <div class="scard-label">Menu Items</div>
+            <div class="scard-label">Products</div>
           </div>
           <div class="scard">
             <div class="scard-top">
@@ -602,14 +602,14 @@ tr:hover td{background:var(--cream)}
       <div class="page" id="pg-menu">
         <div class="sec-hdr">
           <div>
-            <div class="sec-title">Menu Items</div>
+            <div class="sec-title">Products</div>
             <div class="sec-sub" id="menu-count">Loading…</div>
           </div>
-          <button class="btn-add" onclick="openItemModal()">+ Add Item</button>
+          <button class="btn-add" onclick="openItemModal()">+ Add Product</button>
         </div>
         <div class="tbl-wrap">
           <div class="tbl-search">
-            <input type="text" placeholder="🔍  Search items…" oninput="searchItems(this.value)" id="item-search" />
+            <input type="text" placeholder="🔍  Search products…" oninput="searchItems(this.value)" id="item-search" />
             <select onchange="filterItemsCat(this.value)" id="item-cat-filter">
               <option value="">All Categories</option>
             </select>
@@ -720,7 +720,7 @@ tr:hover td{background:var(--cream)}
         </div>
         <div class="field form-full">
           <label>Description</label>
-          <textarea id="item-desc" placeholder="Short description of the item…"></textarea>
+          <textarea id="item-desc" placeholder="Short description of the product…"></textarea>
         </div>
         <div class="field">
           <label>Category</label>
@@ -1092,7 +1092,7 @@ function applyFilters(){
 
 /* Item Modal */
 function openItemModal(item=null){
-  document.getElementById('item-modal-title').textContent = item?'Edit Item':'Add Menu Item';
+  document.getElementById('item-modal-title').textContent = item?'Edit Product':'Add Product';
   document.getElementById('item-id').value      = item?.id||'';
   document.getElementById('item-name').value    = item?.name||'';
   document.getElementById('item-desc').value    = item?.description||'';
@@ -1263,22 +1263,42 @@ function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1) }
 
 /* ── SAMPLE DATA ─────────────────────────────────────────── */
 const SAMPLE_CATS = [
-  {id:1,slug:'hot',    name:'Hot Drinks',  emoji:'☕',sort_order:1},
-  {id:2,slug:'cold',   name:'Cold Drinks', emoji:'🧊',sort_order:2},
-  {id:3,slug:'food',   name:'Food',        emoji:'🥐',sort_order:3},
-  {id:4,slug:'dessert',name:'Desserts',    emoji:'🍰',sort_order:4},
+  {id:1,slug:'lips',     name:'Lips',      emoji:'💄',sort_order:1},
+  {id:2,slug:'eyes',     name:'Eyes',      emoji:'👁️',sort_order:2},
+  {id:3,slug:'face',     name:'Face',      emoji:'✨',sort_order:3},
+  {id:4,slug:'skincare', name:'Skincare',  emoji:'🌸',sort_order:4},
 ];
 const SAMPLE_ITEMS = [
-  {id:1,name:'Espresso',     description:'Double shot, intense and aromatic.',               price_kwd:'0.750',emoji:'☕',badge:'Popular',is_active:true,category_id:1,categories:{name:'Hot Drinks',emoji:'☕',slug:'hot'}},
-  {id:2,name:'Flat White',   description:'Silky microfoam over ristretto.',                 price_kwd:'1.200',emoji:'☕',badge:null,    is_active:true,category_id:1,categories:{name:'Hot Drinks',emoji:'☕',slug:'hot'}},
-  {id:3,name:'Cold Brew',    description:'18-hour steep, smooth and sweet.',                price_kwd:'1.400',emoji:'🧊',badge:'Popular',is_active:true,category_id:2,categories:{name:'Cold Drinks',emoji:'🧊',slug:'cold'}},
-  {id:4,name:'Avocado Toast','description':'Sourdough, avocado, poached egg.',              price_kwd:'2.200',emoji:'🥑',badge:null,    is_active:true,category_id:3,categories:{name:'Food',emoji:'🥐',slug:'food'}},
-  {id:5,name:'Basque Cake',  description:'Ultra-creamy burnt Basque cheesecake.',           price_kwd:'2.000',emoji:'🍰',badge:'Popular',is_active:true,category_id:4,categories:{name:'Desserts',emoji:'🍰',slug:'dessert'}},
+  {id:1, name:'Velvet Matte Lipstick',        description:'Ultra-pigmented matte finish, long-lasting formula.',          price_kwd:'7.500',emoji:'💄',badge:'Bestseller', is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
+  {id:2, name:'Glazed Lip Gloss',             description:'High-shine, non-sticky gloss with plumping effect.',           price_kwd:'5.500',emoji:'💄',badge:'New',        is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
+  {id:3, name:'Satin Lip Liner',              description:'Creamy liner that defines and prevents feathering.',           price_kwd:'4.000',emoji:'💄',badge:null,         is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
+  {id:4, name:'Ombre Lip Kit',                description:'Complete kit for flawless gradient lip effect.',               price_kwd:'12.000',emoji:'💄',badge:'Popular',   is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
+  {id:5, name:'Tinted Lip Balm',              description:'Nourishing balm with a sheer wash of color.',                  price_kwd:'3.500',emoji:'💄',badge:null,         is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
+  {id:6, name:'Plumping Lip Serum',           description:'Peptide-infused serum for fuller, softer lips.',               price_kwd:'9.000',emoji:'💄',badge:'New',        is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
+  {id:7, name:'Smoky Eye Palette',            description:'10 blendable shades for day to night drama.',                  price_kwd:'15.000',emoji:'👁️',badge:'Bestseller',is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
+  {id:8, name:'Lengthening Mascara',          description:'Fiber-infused formula for 3D lash volume.',                    price_kwd:'8.500',emoji:'👁️',badge:'Popular',   is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
+  {id:9, name:'Precision Eyeliner',           description:'Waterproof felt-tip liner for sharp, precise lines.',          price_kwd:'6.000',emoji:'👁️',badge:null,        is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
+  {id:10,name:'Shimmer Eye Topper',           description:'Loose shimmer powder to intensify any look.',                  price_kwd:'7.000',emoji:'👁️',badge:'New',       is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
+  {id:11,name:'Brow Sculpting Pencil',        description:'Micro-tip pencil with spoolie for natural brows.',             price_kwd:'5.000',emoji:'👁️',badge:null,        is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
+  {id:12,name:'Lash Curler',                  description:'Professional-grade curler for lifted, dramatic lashes.',       price_kwd:'4.500',emoji:'👁️',badge:null,        is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
+  {id:13,name:'Dewy Foundation',             description:'Buildable coverage with a radiant glow finish.',               price_kwd:'18.000',emoji:'✨',badge:'Bestseller',is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
+  {id:14,name:'Blurring Setting Powder',      description:'Finely-milled powder for all-day matte skin.',                 price_kwd:'11.000',emoji:'✨',badge:'Popular',   is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
+  {id:15,name:'Rose Gold Highlighter',        description:'Buttery highlighter with a blinding rose-gold finish.',        price_kwd:'10.000',emoji:'✨',badge:'Popular',   is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
+  {id:16,name:'Sculpting Contour Stick',      description:'Cream-to-powder stick for seamless contouring.',               price_kwd:'9.500',emoji:'✨',badge:null,         is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
+  {id:17,name:'Satin Blush',                  description:'Silk-smooth blush with a natural flush finish.',               price_kwd:'8.000',emoji:'✨',badge:'New',        is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
+  {id:18,name:'Skin-Tint SPF 30',            description:'Lightweight tinted moisturizer with sun protection.',           price_kwd:'13.000',emoji:'✨',badge:null,        is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
+  {id:19,name:'Pore Minimizing Primer',       description:'Silicone-free primer that blurs and perfects.',                price_kwd:'10.500',emoji:'✨',badge:null,        is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
+  {id:20,name:'Glass Skin Serum',             description:'Hyaluronic acid serum for intense plumping hydration.',        price_kwd:'22.000',emoji:'🌸',badge:'Bestseller',is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
+  {id:21,name:'Rose Water Toner',             description:'Balancing mist with Bulgarian rose extract.',                  price_kwd:'9.000',emoji:'🌸',badge:'Popular',   is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
+  {id:22,name:'Retinol Night Cream',          description:'Overnight renewal cream with retinol and peptides.',           price_kwd:'25.000',emoji:'🌸',badge:'New',       is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
+  {id:23,name:'Vitamin C Brightening Mask',   description:'Glow mask with 15% stabilized Vitamin C.',                    price_kwd:'14.000',emoji:'🌸',badge:null,        is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
+  {id:24,name:'Ceramide Barrier Cream',       description:'Rich moisturizer that repairs and protects the skin barrier.', price_kwd:'19.000',emoji:'🌸',badge:null,        is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
+  {id:25,name:'Micellar Cleansing Water',     description:'Gentle yet thorough makeup remover for all skin types.',       price_kwd:'7.500',emoji:'🌸',badge:null,        is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
 ];
 const SAMPLE_ORDERS = [
-  {id:1001,customer_name:'Ahmad Al-Rashid',items_summary:'2× Flat White, 1× Croissant',total_kwd:'3.000',status:'confirmed',created_at:new Date().toISOString()},
-  {id:1002,customer_name:'Noura Al-Qattan', items_summary:'1× Cold Brew, 1× Basque Cake',total_kwd:'3.400',status:'making',  created_at:new Date(Date.now()-600000).toISOString()},
-  {id:1003,customer_name:'Walk-in',          items_summary:'1× Espresso',                total_kwd:'0.750',status:'ready',   created_at:new Date(Date.now()-1200000).toISOString()},
+  {id:1001,customer_name:'Nour Al-Ahmad',   items_summary:'2× Velvet Matte Lipstick, 1× Smoky Eye Palette', total_kwd:'30.000',status:'confirmed',created_at:new Date().toISOString()},
+  {id:1002,customer_name:'Lina Al-Rashid', items_summary:'1× Glass Skin Serum, 1× Rose Gold Highlighter',  total_kwd:'32.000',status:'making',   created_at:new Date(Date.now()-600000).toISOString()},
+  {id:1003,customer_name:'Sara Al-Qattan', items_summary:'1× Dewy Foundation, 1× Satin Blush',             total_kwd:'26.000',status:'ready',    created_at:new Date(Date.now()-1200000).toISOString()},
 ];
 </script>
 </body>
