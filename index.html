@@ -1537,6 +1537,7 @@ document.addEventListener('keydown', e => { if(e.key==='Escape') closeProduct();
     <button class="pm-close" onclick="closeProduct()" aria-label="Close">✕</button>
     <div class="pm-img-wrap" id="pm-img"></div>
     <div class="pm-info">
+      <button onclick="closeProduct()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;letter-spacing:.5px;display:flex;align-items:center;gap:6px;padding:0;margin-bottom:18px;transition:color .2s" onmouseover="this.style.color='var(--rose)'" onmouseout="this.style.color='var(--muted)'">← Back to all products</button>
       <div class="pm-cat-badge" id="pm-cat"></div>
       <div class="pm-name" id="pm-name"></div>
       <div class="pm-desc" id="pm-desc"></div>
