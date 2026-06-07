@@ -963,18 +963,12 @@ function toast(msg, ok=true){
 let allItemsData=[], allCatsData=[], allOrdersData=[];
 
 async function fetchItems(){
-  if(!db) return SAMPLE_ITEMS;
-  const {data,error} = await db.from('menu_items')
-    .select('*, categories(name,emoji,slug)')
-    .order('sort_order');
-  if(error||!data) return SAMPLE_ITEMS;
-  return data;
+  // Always use local SAMPLE data — no Supabase needed for products
+  return SAMPLE_ITEMS;
 }
 async function fetchCats(){
-  if(!db) return SAMPLE_CATS;
-  const {data,error} = await db.from('categories').select('*').order('sort_order');
-  if(error||!data) return SAMPLE_CATS;
-  return data;
+  // Always use local SAMPLE data
+  return SAMPLE_CATS;
 }
 async function fetchOrders(){
   if(!db) return SAMPLE_ORDERS;
