@@ -13,6 +13,7 @@
   --berry:#7B1D4F;   --rose:#C8607A;   --blush:#EBA8B8;
   --gold:#C9956E;    --gold2:#E2B99A;
   --champagne:#F5E6D8; --ivory:#FBF6F2; --ivory2:#F4EDE8; --ivory3:#EDE3DC;
+  --cream:#FBF6F2; --cream2:#F4EDE8;
   --white:#FFFCFA;
   --text:#1E0812;    --muted:#7A5060;  --border:#E8D4D0;
   --green:#2D8B55;   --red:#C0392B;    --blue:#2563EB;
@@ -59,7 +60,7 @@ body{font-family:'Inter',sans-serif;background:var(--ivory2);color:var(--text);m
 .login-wrap input{
   width:100%;padding:14px 16px;
   border:2px solid rgba(255,255,255,.1);border-radius:10px;
-  background:rgba(255,255,255,.07);color:var(--cream);
+  background:rgba(255,255,255,.07);color:#ffffff;
   font-size:15px;font-family:inherit;outline:none;
   transition:border-color .2s;
 }
@@ -112,7 +113,7 @@ body{font-family:'Inter',sans-serif;background:var(--ivory2);color:var(--text);m
 }
 .tb-btn:hover{border-color:var(--rose);color:var(--plum)}
 .tb-logout{
-  background:var(--plum);color:var(--cream);
+  background:var(--plum);color:#ffffff;
   border:none;padding:8px 18px;border-radius:10px;
   font-size:13px;font-weight:600;cursor:pointer;
   display:flex;align-items:center;gap:7px;
@@ -202,7 +203,7 @@ body{font-family:'Inter',sans-serif;background:var(--ivory2);color:var(--text);m
 /* ═══════════════════════ BUTTONS ═══════════════════════ */
 .btn-add{
   background:linear-gradient(135deg,var(--plum2),var(--berry));
-  color:var(--cream);border:none;
+  color:#ffffff;border:none;
   padding:11px 22px;border-radius:11px;
   font-size:13px;font-weight:700;cursor:pointer;
   display:flex;align-items:center;gap:8px;
@@ -336,8 +337,8 @@ tr:hover td{background:var(--cream)}
 }
 .btn-cancel:hover{border-color:var(--rose);color:var(--plum)}
 .btn-save{
-  background:linear-gradient(135deg,var(--rose),var(--blush));
-  color:var(--plum);border:none;border-radius:10px;
+  background:linear-gradient(135deg,var(--berry),var(--rose));
+  color:#ffffff;border:none;border-radius:10px;
   padding:11px 28px;font-size:14px;font-weight:700;
   cursor:pointer;transition:all .2s;
   box-shadow:0 4px 16px rgba(198,132,66,.35);
@@ -406,7 +407,7 @@ tr:hover td{background:var(--cream)}
 /* ═══════════════════════ TOAST ═══════════════════════ */
 #admin-toast{
   position:fixed;bottom:28px;right:28px;z-index:999;
-  background:var(--plum);color:var(--cream);
+  background:var(--plum);color:#ffffff;
   border-radius:var(--r);padding:16px 22px;
   box-shadow:var(--sh-lg);
   display:flex;align-items:center;gap:10px;
