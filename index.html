@@ -369,7 +369,7 @@ section{padding:100px 6%;position:relative;z-index:1}
 }
 .products-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  grid-template-columns:repeat(5,1fr);
   gap:24px;
 }
 .pcard{
@@ -989,7 +989,7 @@ footer{
   .hero-chips{flex-wrap:wrap;justify-content:center;gap:8px}
 
   /* Product grid — 2 columns on phone */
-  .menu-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .products-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px}
   .pcard-name{font-size:13px}
   .pcard-desc{display:none}
   .pprice{font-size:14px}
@@ -1095,7 +1095,7 @@ footer{
 <!-- STATS -->
 <div class="stats-sec">
   <div class="stats-inner">
-    <div class="stat"><div class="stat-num">200+</div><div class="stat-label">Products</div></div>
+    <div class="stat"><div class="stat-num" id="stat-product-count">28</div><div class="stat-label">Products</div></div>
     <div class="stat"><div class="stat-num">50K+</div><div class="stat-label">Happy Clients</div></div>
     <div class="stat"><div class="stat-num">4.9</div><div class="stat-label">Rating</div></div>
     <div class="stat"><div class="stat-num">5+</div><div class="stat-label">Years in Kuwait</div></div>
@@ -1351,6 +1351,8 @@ async function loadMenu(){
   });
   buildTabs(CATS);
   render('all');
+  const sc = document.getElementById('stat-product-count');
+  if(sc) sc.textContent = allItems.length;
 }
 
 function buildTabs(cats){
