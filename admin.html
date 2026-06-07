@@ -535,6 +535,8 @@ tr:hover td{background:var(--cream)}
       <button class="sitem" onclick="nav('cats',this)"><span class="ico">🏷️</span> Categories</button>
       <div class="sidebar-section">Operations</div>
       <button class="sitem" onclick="nav('orders',this)"><span class="ico">📋</span> Orders</button>
+      <button class="sitem" onclick="nav('deleted',this)"><span class="ico">🗑️</span> Deleted</button>
+      <button class="sitem" onclick="nav('sales',this)"><span class="ico">📈</span> Sales</button>
       <button class="sitem" onclick="nav('settings',this)"><span class="ico">⚙️</span> Settings</button>
       <div class="sidebar-section" style="margin-top:auto"></div>
       <button class="sitem" onclick="window.open('index.html','_blank')"><span class="ico">🌐</span> View Site</button>
@@ -698,6 +700,63 @@ tr:hover td{background:var(--cream)}
             <div class="account-cards" id="accounts-list"></div>
           </div>
 
+        </div>
+      </div>
+
+
+      <!-- DELETED PRODUCTS -->
+      <div class="page" id="pg-deleted">
+        <div class="sec-hdr">
+          <div>
+            <div class="sec-title">Deleted Products</div>
+            <div class="sec-sub">Products hidden from the store</div>
+          </div>
+        </div>
+        <div class="tbl-wrap" id="deleted-list">
+          <div class="empty"><div class="empty-ico">&#x2705;</div><p>No deleted products</p></div>
+        </div>
+      </div>
+
+      <!-- SALES -->
+      <div class="page" id="pg-sales">
+        <div class="sec-hdr">
+          <div>
+            <div class="sec-title">Sales Analytics</div>
+            <div class="sec-sub">Revenue from customer orders</div>
+          </div>
+          <button class="btn-add" onclick="loadSalesTab()">&#x21BB; Refresh</button>
+        </div>
+        <div class="stat-cards" style="margin-bottom:28px">
+          <div class="scard">
+            <div class="scard-top"><div class="scard-ico ico-caramel">&#x1F550;</div></div>
+            <div class="scard-num" id="sl-24h-rev">&ndash;</div>
+            <div class="scard-label">Last 24 Hours (KWD)</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px" id="sl-24h-cnt"></div>
+          </div>
+          <div class="scard">
+            <div class="scard-top"><div class="scard-ico ico-blue">&#x1F4C5;</div></div>
+            <div class="scard-num" id="sl-7d-rev">&ndash;</div>
+            <div class="scard-label">Last 7 Days (KWD)</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px" id="sl-7d-cnt"></div>
+          </div>
+          <div class="scard">
+            <div class="scard-top"><div class="scard-ico ico-green">&#x1F4C6;</div></div>
+            <div class="scard-num" id="sl-30d-rev">&ndash;</div>
+            <div class="scard-label">Last 30 Days (KWD)</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px" id="sl-30d-cnt"></div>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <div style="padding:20px 24px;border-bottom:1px solid var(--border)">
+            <div class="sec-title">Top Products (Last 30 Days)</div>
+            <div class="sec-sub">Ranked by units sold</div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Product</th><th>Units Sold</th><th>Revenue</th></tr></thead>
+              <tbody id="sl-top-tbody"><tr><td colspan="3" style="text-align:center;padding:32px;color:var(--muted)">Loading&hellip;</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -870,6 +929,8 @@ function nav(page, btn){
   if(page==='cats')     loadCats();
   if(page==='orders')   loadOrders();
   if(page==='settings') loadSettings();
+  if(page==='deleted')  loadDeletedTab();
+  if(page==='sales')    loadSalesTab();
 }
 
 /* ── SETTINGS ────────────────────────────────────────────── */
@@ -964,7 +1025,10 @@ let allItemsData=[], allCatsData=[], allOrdersData=[];
 
 async function fetchItems(){
   // Always use local SAMPLE data — no Supabase needed for products
-  return SAMPLE_ITEMS;
+  return SAMPLE_ITEMS.map(i => {
+    const stored = localStorage.getItem('velour_img_'+i.id);
+    return stored ? {...i, image_url: stored} : i;
+  });
 }
 async function fetchCats(){
   // Always use local SAMPLE data
@@ -1046,7 +1110,8 @@ function renderItemsTable(items){
   }
   tb.innerHTML = items.map(item=>{
     const cat = item.categories||{name:item.category_name||'—',emoji:'•'};
-    const imgSrc = item.image_url||'';
+    const storedImg = localStorage.getItem('velour_img_'+item.id);
+    const imgSrc = storedImg || item.image_url||'';
     const thumb = imgSrc
       ? `<img src="${imgSrc}" style="width:52px;height:52px;object-fit:contain;border-radius:8px;background:var(--ivory2);border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'" />`
       : `<span style="width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:26px;background:var(--ivory2);border-radius:8px;flex-shrink:0">${item.emoji||'💄'}</span>`;
@@ -1076,6 +1141,7 @@ function renderItemsTable(items){
       <td>
         <div class="td-actions">
           <button class="btn-sm btn-edit" onclick="editItem(${item.id||0})">✏️ Edit</button>
+          <button class="btn-sm btn-edit" onclick="triggerPhotoUpload(${item.id||0})">📷 Photo</button>
           <button class="btn-sm btn-del" onclick="delItem(${item.id||0},'${item.name.replace(/'/g,"\\'")}')">🗑</button>
         </div>
       </td>
@@ -1305,6 +1371,89 @@ async function updateOrderStatus(id,status){
 
 /* ── UTILS ───────────────────────────────────────────────── */
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1) }
+
+/* ── PHOTO UPLOAD ────────────────────────────────────────── */
+function triggerPhotoUpload(id){
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.onchange = e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      localStorage.setItem('velour_img_'+id, ev.target.result);
+      const item = allItemsData.find(i=>i.id===id);
+      if(item) item.image_url = ev.target.result;
+      renderItemsTable(filteredItems);
+      toast('Photo updated!');
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
+
+/* ── DELETED TAB ─────────────────────────────────────────── */
+function loadDeletedTab(){
+  const hidden = getHiddenIds();
+  const el = document.getElementById('deleted-list');
+  if(!hidden.length){
+    el.innerHTML = '<div class="empty"><div class="empty-ico">&#x2705;</div><p>No deleted products</p></div>';
+    return;
+  }
+  const items = SAMPLE_ITEMS.filter(i => hidden.includes(i.id));
+  el.innerHTML = items.map(i => `
+    <div style="display:flex;align-items:center;gap:16px;padding:16px 24px;border-bottom:1px solid var(--border)">
+      ${i.image_url ? `<img src="${i.image_url}" style="width:52px;height:52px;object-fit:contain;border-radius:8px;background:var(--ivory2);border:1px solid var(--border)">` : `<span style="width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--ivory2);border-radius:8px">${i.emoji||'💄'}</span>`}
+      <div style="flex:1">
+        <div style="font-weight:600;color:var(--plum)">${i.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${i.categories?.name||''} · ${parseFloat(i.price_kwd).toFixed(3)} KWD</div>
+      </div>
+      <button class="btn-sm btn-edit" onclick="restoreItem(${i.id})">&#x21A9; Restore</button>
+    </div>
+  `).join('');
+}
+function restoreItem(id){
+  let hidden = getHiddenIds().filter(h => h !== id);
+  localStorage.setItem('velour_hidden_ids', JSON.stringify(hidden));
+  loadDeletedTab();
+  toast('Product restored');
+}
+
+/* ── SALES TAB ───────────────────────────────────────────── */
+function loadSalesTab(){
+  const orders = JSON.parse(localStorage.getItem('velour_order_history')||'[]');
+  const now = Date.now();
+  const h24 = orders.filter(o => now - new Date(o.date).getTime() < 86400000);
+  const d7  = orders.filter(o => now - new Date(o.date).getTime() < 604800000);
+  const d30 = orders.filter(o => now - new Date(o.date).getTime() < 2592000000);
+
+  function stats(arr){ return { count: arr.length, rev: arr.reduce((s,o)=>s+o.total,0) }; }
+  const s24=stats(h24), s7=stats(d7), s30=stats(d30);
+
+  document.getElementById('sl-24h-rev').textContent  = s24.rev.toFixed(3);
+  document.getElementById('sl-24h-cnt').textContent  = s24.count + ' orders';
+  document.getElementById('sl-7d-rev').textContent   = s7.rev.toFixed(3);
+  document.getElementById('sl-7d-cnt').textContent   = s7.count + ' orders';
+  document.getElementById('sl-30d-rev').textContent  = s30.rev.toFixed(3);
+  document.getElementById('sl-30d-cnt').textContent  = s30.count + ' orders';
+
+  const tally = {};
+  d30.forEach(o => o.items.forEach(i => { tally[i.name] = (tally[i.name]||0) + i.qty; }));
+  const sorted = Object.entries(tally).sort((a,b)=>b[1]-a[1]);
+  const tbody = document.getElementById('sl-top-tbody');
+  if(!sorted.length){
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:32px;color:var(--muted)">No sales data yet &#8212; place some orders on the site first!</td></tr>';
+  } else {
+    tbody.innerHTML = sorted.map(([name,qty],i)=>`
+      <tr>
+        <td><span style="font-weight:700;color:var(--muted);margin-right:10px">#${i+1}</span>${name}</td>
+        <td style="font-weight:600">${qty} units</td>
+        <td>${(qty * (allItemsData.find(p=>p.name===name)?.price_kwd||0)).toFixed(3)} KWD</td>
+      </tr>
+    `).join('');
+  }
+}
 
 /* ── SAMPLE DATA ─────────────────────────────────────────── */
 const SAMPLE_CATS = [

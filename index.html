@@ -1345,6 +1345,10 @@ async function loadMenu(){
       ? {...i, price_kwd: parseFloat(overrides[i.name]).toFixed(3)}
       : i
     );
+  allItems = allItems.map(i => {
+    const stored = localStorage.getItem('velour_img_'+i.id);
+    return stored ? {...i, image_url: stored} : i;
+  });
   buildTabs(CATS);
   render('all');
 }
@@ -1455,11 +1459,22 @@ function toggleCart(){
   document.getElementById('cart-drawer').classList.toggle('open');
   document.getElementById('cart-backdrop').classList.toggle('open');
 }
+function saveOrderToHistory(items, total){
+  const orders = JSON.parse(localStorage.getItem('velour_order_history')||'[]');
+  orders.push({
+    id: Date.now(),
+    date: new Date().toISOString(),
+    items: items.map(i=>({name:i.name, qty:i.qty, price:i.price})),
+    total
+  });
+  localStorage.setItem('velour_order_history', JSON.stringify(orders));
+}
 function checkout(){
   if(!cart.length)return;
   const total=cart.reduce((s,i)=>s+(i.price*i.qty),0);
   const lines=cart.map(i=>`${i.qty}× ${i.name}`).join('\n');
   alert(`Order placed! ✦\n\n${lines}\n\nTotal: ${total.toFixed(3)} KWD\n\nThank you for shopping VELOUR!`);
+  saveOrderToHistory(cart, total);
   clearCart();toggleCart();
 }
 
