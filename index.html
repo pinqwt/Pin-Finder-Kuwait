@@ -1198,18 +1198,7 @@ function go(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'})
 let allItems = [], activeCat = 'all';
 
 async function loadMenu(){
-  try{
-    const [{data:cats},{data:items}] = await Promise.all([
-      db.from('categories').select('*').order('sort_order'),
-      db.from('menu_items').select('*, categories(name,emoji,slug)').eq('is_active',true).order('sort_order')
-    ]);
-    if(items && items.length){
-      allItems = items.map(i=>({...i,cat:i.categories?.slug||''}));
-      buildTabs(cats||[]);
-      render('all');
-      return;
-    }
-  } catch(e){}
+  // Always use local SAMPLE data — no SQL needed when adding products
   allItems = SAMPLE;
   buildTabs(CATS);
   render('all');
