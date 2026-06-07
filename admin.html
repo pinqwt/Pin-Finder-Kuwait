@@ -1021,7 +1021,9 @@ async function loadDashboard(){
 let filteredItems=[], searchQ='', catFilterQ='';
 
 async function loadItems(){
-  allItemsData = await fetchItems();
+  const raw = await fetchItems();
+  const hidden = getHiddenIds();
+  allItemsData = raw.filter(i=>!hidden.includes(i.id));
   filteredItems = [...allItemsData];
   document.getElementById('menu-count').textContent = `${allItemsData.length} items`;
   allCatsData = await fetchCats();
@@ -1128,14 +1130,24 @@ async function editItem(id){
   if(item) openItemModal(item);
 }
 async function delItem(id,name){
-  if(!confirm(`Delete "${name}"?`)) return;
+  if(!confirm(`Delete "${name}"?\n\nThis will hide it from the main site too.`)) return;
   if(db){
     const {error}=await db.from('menu_items').delete().eq('id',id);
     if(error){ toast('Error: '+error.message,false); return; }
   }
+  // Remove from in-memory array
+  allItemsData = allItemsData.filter(i=>i.id!==id);
+  filteredItems = filteredItems.filter(i=>i.id!==id);
+  // Persist deletion so index.html respects it
+  const hidden = getHiddenIds();
+  if(!hidden.includes(id)) hidden.push(id);
+  localStorage.setItem('velour_hidden_ids', JSON.stringify(hidden));
   toast(`"${name}" deleted`);
-  loadItems(); loadDashboard();
+  renderItemsTable(filteredItems);
+  document.getElementById('menu-count').textContent = `${allItemsData.length} items`;
+  loadDashboard();
 }
+function getHiddenIds(){ try{ return JSON.parse(localStorage.getItem('velour_hidden_ids')||'[]'); }catch(e){return[];} }
 
 /* ── LOCALSTORAGE PRICE SYNC ─────────────────────────────── */
 function getPriceOverrides(){ try{ return JSON.parse(localStorage.getItem('velour_prices')||'{}'); }catch(e){return{};} }
@@ -1308,32 +1320,35 @@ const SAMPLE_CATS = [
   {id:4,slug:'skincare', name:'Skincare',  emoji:'🌸',sort_order:4},
 ];
 const SAMPLE_ITEMS = [
-  {id:1, name:'Velvet Matte Lipstick',        description:'Ultra-pigmented matte finish, long-lasting formula.',          price_kwd:'7.500',emoji:'💄',badge:'Bestseller', is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
-  {id:2, name:'Glazed Lip Gloss',             description:'High-shine, non-sticky gloss with plumping effect.',           price_kwd:'5.500',emoji:'💄',badge:'New',        is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
-  {id:3, name:'Satin Lip Liner',              description:'Creamy liner that defines and prevents feathering.',           price_kwd:'4.000',emoji:'💄',badge:null,         is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
-  {id:4, name:'Ombre Lip Kit',                description:'Complete kit for flawless gradient lip effect.',               price_kwd:'12.000',emoji:'💄',badge:'Popular',   is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
-  {id:5, name:'Tinted Lip Balm',              description:'Nourishing balm with a sheer wash of color.',                  price_kwd:'3.500',emoji:'💄',badge:null,         is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
-  {id:6, name:'Plumping Lip Serum',           description:'Peptide-infused serum for fuller, softer lips.',               price_kwd:'9.000',emoji:'💄',badge:'New',        is_active:true,category_id:1,categories:{name:'Lips',emoji:'💄',slug:'lips'}},
-  {id:7, name:'Smoky Eye Palette',            description:'10 blendable shades for day to night drama.',                  price_kwd:'15.000',emoji:'👁️',badge:'Bestseller',is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
-  {id:8, name:'Lengthening Mascara',          description:'Fiber-infused formula for 3D lash volume.',                    price_kwd:'8.500',emoji:'👁️',badge:'Popular',   is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
-  {id:9, name:'Precision Eyeliner',           description:'Waterproof felt-tip liner for sharp, precise lines.',          price_kwd:'6.000',emoji:'👁️',badge:null,        is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
-  {id:10,name:'Shimmer Eye Topper',           description:'Loose shimmer powder to intensify any look.',                  price_kwd:'7.000',emoji:'👁️',badge:'New',       is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
-  {id:11,name:'Brow Sculpting Pencil',        description:'Micro-tip pencil with spoolie for natural brows.',             price_kwd:'5.000',emoji:'👁️',badge:null,        is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
-  {id:12,name:'Lash Curler',                  description:'Professional-grade curler for lifted, dramatic lashes.',       price_kwd:'4.500',emoji:'👁️',badge:null,        is_active:true,category_id:2,categories:{name:'Eyes',emoji:'👁️',slug:'eyes'}},
-  {id:13,name:'Dewy Foundation',             description:'Buildable coverage with a radiant glow finish.',               price_kwd:'18.000',emoji:'✨',badge:'Bestseller',is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
-  {id:14,name:'Blurring Setting Powder',      description:'Finely-milled powder for all-day matte skin.',                 price_kwd:'11.000',emoji:'✨',badge:'Popular',   is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
-  {id:15,name:'Rose Gold Highlighter',        description:'Buttery highlighter with a blinding rose-gold finish.',        price_kwd:'10.000',emoji:'✨',badge:'Popular',   is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
-  {id:16,name:'Sculpting Contour Stick',      description:'Cream-to-powder stick for seamless contouring.',               price_kwd:'9.500',emoji:'✨',badge:null,         is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
-  {id:17,name:'Satin Blush',                  description:'Silk-smooth blush with a natural flush finish.',               price_kwd:'8.000',emoji:'✨',badge:'New',        is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
-  {id:18,name:'Skin-Tint SPF 30',            description:'Lightweight tinted moisturizer with sun protection.',           price_kwd:'13.000',emoji:'✨',badge:null,        is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
-  {id:19,name:'Pore Minimizing Primer',       description:'Silicone-free primer that blurs and perfects.',                price_kwd:'10.500',emoji:'✨',badge:null,        is_active:true,category_id:3,categories:{name:'Face',emoji:'✨',slug:'face'}},
-  {id:20,name:'Glass Skin Serum',             description:'Hyaluronic acid serum for intense plumping hydration.',        price_kwd:'22.000',emoji:'🌸',badge:'Bestseller',is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
-  {id:21,name:'Rose Water Toner',             description:'Balancing mist with Bulgarian rose extract.',                  price_kwd:'9.000',emoji:'🌸',badge:'Popular',   is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
-  {id:22,name:'Retinol Night Cream',          description:'Overnight renewal cream with retinol and peptides.',           price_kwd:'25.000',emoji:'🌸',badge:'New',       is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
-  {id:23,name:'Vitamin C Brightening Mask',   description:'Glow mask with 15% stabilized Vitamin C.',                    price_kwd:'14.000',emoji:'🌸',badge:null,        is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
-  {id:24,name:'Ceramide Barrier Cream',       description:'Rich moisturizer that repairs and protects the skin barrier.', price_kwd:'19.000',emoji:'🌸',badge:null,        is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
-  {id:25,name:'Micellar Cleansing Water',     description:'Gentle yet thorough makeup remover for all skin types.',       price_kwd:'7.500',emoji:'🌸',badge:null,        is_active:true,category_id:4,categories:{name:'Skincare',emoji:'🌸',slug:'skincare'}},
-];
+  {id:1, name:'Glow Kiss Burgundy',       description:'Deep burgundy Glow Kiss lipstick. Rich, long-lasting colour with a velvety soft finish.',     price_kwd:'8.500', emoji:'💋',badge:'New',        is_active:true,category_id:1,image_url:'product-images/glow-kiss-burgundy-lipstick.jpg',   categories:{name:'Lips',  emoji:'💋',slug:'lips'}},
+  {id:2, name:'Holographic Lip Gloss',    description:'Iridescent holographic gloss with rainbow shimmer. Non-sticky, ultra-glossy finish.',         price_kwd:'7.000', emoji:'✨',    badge:'New',        is_active:true,category_id:1,image_url:'product-images/holographic-lip-gloss.jpg',         categories:{name:'Lips',  emoji:'💋',slug:'lips'}},
+  {id:3, name:'3-in-1 Lip Liner',         description:'Versatile lip liner that defines, fills and contours. Long-wearing formula in nude shades.',  price_kwd:'5.000', emoji:'💄',badge:'New',        is_active:true,category_id:1,image_url:'product-images/3in1-lip-liner.jpg',               categories:{name:'Lips',  emoji:'💋',slug:'lips'}},
+  {id:4, name:'Nude Lip Kit Set',         description:'Complete nude lip kit - liner, lipstick and gloss for the perfect everyday pout.',            price_kwd:'14.000',emoji:'💋',badge:'Bestseller', is_active:true,category_id:1,image_url:'product-images/nude-lip-kit-set.jpg',             categories:{name:'Lips',  emoji:'💋',slug:'lips'}},
+  {id:5, name:'Glow Kiss Pink Duo',       description:'Vibrant pink Glow Kiss lip gloss + matching lipstick duo. Bold colour, all-day wear.',        price_kwd:'11.000',emoji:'💋',badge:'Popular',    is_active:true,category_id:1,image_url:'product-images/glow-kiss-pink-duo.jpg',           categories:{name:'Lips',  emoji:'💋',slug:'lips'}},
+  {id:6, name:'Clear Glow Gloss',         description:'Crystal-clear high-shine gloss. Plumping effect with a mirror-finish glow.',                 price_kwd:'6.000', emoji:'✨',    badge:null,         is_active:true,category_id:1,image_url:'product-images/clear-glow-gloss.jpg',            categories:{name:'Lips',  emoji:'💋',slug:'lips'}},
+  {id:7, name:'Silver Holo Gloss',        description:'Silver holographic gloss with multi-dimensional shimmer. Layer over any lip colour.',         price_kwd:'7.000', emoji:'✨',    badge:'Limited',    is_active:true,category_id:1,image_url:'product-images/silver-holo-gloss.jpg',           categories:{name:'Lips',  emoji:'💋',slug:'lips'}},
+  {id:8, name:'Coral Glow Lipstick',      description:'Warm coral Glow Kiss lipstick duo. Buildable coverage with a luminous satin finish.',         price_kwd:'9.000', emoji:'💋',badge:null,         is_active:true,category_id:1,image_url:'product-images/coral-glow-lipstick.jpg',         categories:{name:'Lips',  emoji:'💋',slug:'lips'}},
+  {id:9, name:'Black Kohl Liner',         description:'Intensely black kohl pencil with a smudge tip. Perfect for smoky eyes and bold liner looks.',  price_kwd:'4.500',emoji:'👁️',badge:null,   is_active:true,category_id:2,image_url:'product-images/black-kohl-liner.jpg',            categories:{name:'Eyes',  emoji:'👁️',slug:'eyes'}},
+  {id:10,name:'Volume Mascara GR',        description:'Glow Kiss volume mascara. Triple-action brush for extreme volume, length and lift.',           price_kwd:'8.500', emoji:'👁️',badge:'Bestseller',is_active:true,category_id:2,image_url:'product-images/volume-mascara-gr.jpg',  categories:{name:'Eyes',  emoji:'👁️',slug:'eyes'}},
+  {id:11,name:'Rose Eyeshadow Palette',   description:'12-shade palette in rosy mauves, champagnes and golds. Perfect for every occasion.',         price_kwd:'18.000',emoji:'🎨',badge:'Bestseller', is_active:true,category_id:2,image_url:'product-images/rose-eyeshadow-palette.jpg',      categories:{name:'Eyes',  emoji:'👁️',slug:'eyes'}},
+  {id:12,name:'Brow Defining Pencil',     description:'Ultra-precise brow pencil with spoolie. Fills gaps and defines shape all day.',              price_kwd:'5.500', emoji:'✏️',badge:null,        is_active:true,category_id:2,image_url:'product-images/brow-defining-pencil.jpg',        categories:{name:'Eyes',  emoji:'👁️',slug:'eyes'}},
+  {id:13,name:'Precision Liquid Liner',   description:'Jet-black liquid liner with a fine felt tip. Wing it perfectly every single time.',          price_kwd:'6.000', emoji:'👁️',badge:'New',   is_active:true,category_id:2,image_url:'product-images/precision-liquid-liner.jpg',     categories:{name:'Eyes',  emoji:'👁️',slug:'eyes'}},
+  {id:14,name:'G Compact Palette',        description:'Luxe embossed compact with blush, highlight and contour. Travel-friendly.',                  price_kwd:'22.000',emoji:'✨',    badge:'Exclusive',  is_active:true,category_id:3,image_url:'product-images/g-compact-palette.jpg',          categories:{name:'Face',  emoji:'✨',    slug:'face'}},
+  {id:15,name:'Luminous Foundation',      description:'Skin-like full coverage foundation. Humidity-resistant with a natural glow finish.',         price_kwd:'14.000',emoji:'✨',    badge:'Bestseller', is_active:true,category_id:3,image_url:'product-images/luminous-foundation.jpg',        categories:{name:'Face',  emoji:'✨',    slug:'face'}},
+  {id:16,name:'Rose Blush Compact',       description:'Pressed blush with a sculpted rose design. Silky pigment for a natural flush.',              price_kwd:'10.000',emoji:'🌸',badge:'Popular',    is_active:true,category_id:3,image_url:'product-images/rose-blush-compact.jpg',        categories:{name:'Face',  emoji:'✨',    slug:'face'}},
+  {id:17,name:'Gold Highlighter Compact', description:'Baked highlighter with intense golden glow. Buildable shimmer for cheekbones.',              price_kwd:'12.000',emoji:'💛',badge:'Exclusive',  is_active:true,category_id:3,image_url:'product-images/gold-highlighter-compact.jpg',  categories:{name:'Face',  emoji:'✨',    slug:'face'}},
+  {id:18,name:'Glitter Duo',              description:'Pink & purple chunky glitter duo. Eye-catching sparkle for lids, face and body.',            price_kwd:'9.000', emoji:'🌟',badge:'Limited',    is_active:true,category_id:2,image_url:'product-images/glitter-duo.jpg',               categories:{name:'Eyes',  emoji:'👁️',slug:'eyes'}},
+  {id:19,name:'Lash Serum & Curler Set',  description:'Lash growth serum with rose-gold curler. Nourish, lift and curl for dramatic lashes.',       price_kwd:'16.000',emoji:'👁️',badge:'New',  is_active:true,category_id:2,image_url:'product-images/lash-serum-curler.jpg',         categories:{name:'Eyes',  emoji:'👁️',slug:'eyes'}},
+  {id:20,name:'Setting Spray & Primer',   description:'Hydrating primer + long-wear setting spray duo. 16-hour flawless finish.',                   price_kwd:'13.000',emoji:'💦',badge:'Bestseller', is_active:true,category_id:3,image_url:'product-images/setting-spray-primer.jpg',      categories:{name:'Face',  emoji:'✨',    slug:'face'}},
+  {id:21,name:'Rose Water Toner',         description:'Hydrating toner with pure damask rose water. Balances and refreshes skin.',                  price_kwd:'8.500', emoji:'🌹',badge:'New',        is_active:true,category_id:4,image_url:'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&q=85',  categories:{name:'Skincare',emoji:'🌿',slug:'skincare'}},
+  {id:22,name:'Vitamin C Serum',          description:'Brightening 15% vitamin C serum. Fades dark spots and evens skin tone.',                    price_kwd:'14.000',emoji:'🌿',badge:'Bestseller', is_active:true,category_id:4,image_url:'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&q=85',    categories:{name:'Skincare',emoji:'🌿',slug:'skincare'}},
+  {id:23,name:'Night Repair Cream',       description:'Rich overnight cream with retinol and peptides. Wake up to visibly smoother skin.',          price_kwd:'16.000',emoji:'🌙',badge:null,         is_active:true,category_id:4,image_url:'https://images.unsplash.com/photo-1617897903246-719242758050?w=600&q=85',   categories:{name:'Skincare',emoji:'🌿',slug:'skincare'}},
+  {id:24,name:'Hyaluronic Acid Serum',    description:'3-weight hyaluronic acid for deep, lasting hydration. Plumps and smooths instantly.',       price_kwd:'13.000',emoji:'💧',badge:'Bestseller', is_active:true,category_id:4,image_url:'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=600&q=85',    categories:{name:'Skincare',emoji:'🌿',slug:'skincare'}},
+  {id:25,name:'Glow Face Oil',            description:'Lightweight rosehip, jojoba and squalane oil blend. Glowing skin overnight.',               price_kwd:'15.000',emoji:'🌹',badge:null,         is_active:true,category_id:4,image_url:'https://images.unsplash.com/photo-1570194065650-d99fb4b38aac?w=600&q=85',    categories:{name:'Skincare',emoji:'🌿',slug:'skincare'}},
+  {id:26,name:'Brightening Sheet Mask',   description:'Korean-formula mask soaked in niacinamide + arbutin. Brighter skin in 20 minutes.',         price_kwd:'3.500', emoji:'🌿',badge:null,         is_active:true,category_id:4,image_url:'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=600&q=85',    categories:{name:'Skincare',emoji:'🌿',slug:'skincare'}},
+  {id:27,name:'Micellar Cleansing Water', description:'No-rinse micellar water removes makeup, SPF and impurities in one sweep.',                  price_kwd:'6.500', emoji:'💦',badge:'Essential',  is_active:true,category_id:4,image_url:'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=600&q=85',    categories:{name:'Skincare',emoji:'🌿',slug:'skincare'}},
+  {id:28,name:'SPF 50 Sunscreen',         description:'Lightweight, invisible sunscreen. Broad-spectrum protection with silky finish.',             price_kwd:'9.500', emoji:'☀️',badge:'Essential',is_active:true,category_id:4,image_url:'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600&q=85',    categories:{name:'Skincare',emoji:'🌿',slug:'skincare'}},
+]
 const SAMPLE_ORDERS = [
   {id:1001,customer_name:'Nour Al-Ahmad',   items_summary:'2× Velvet Matte Lipstick, 1× Smoky Eye Palette', total_kwd:'30.000',status:'confirmed',created_at:new Date().toISOString()},
   {id:1002,customer_name:'Lina Al-Rashid', items_summary:'1× Glass Skin Serum, 1× Rose Gold Highlighter',  total_kwd:'32.000',status:'making',   created_at:new Date(Date.now()-600000).toISOString()},
