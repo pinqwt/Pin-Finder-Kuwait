@@ -1203,8 +1203,13 @@ function go(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'})
 let allItems = [], activeCat = 'all';
 
 async function loadMenu(){
-  // Always use local SAMPLE data — no SQL needed when adding products
-  allItems = SAMPLE;
+  // Apply any price overrides saved from admin panel
+  let overrides = {};
+  try{ overrides = JSON.parse(localStorage.getItem('velour_prices')||'{}'); }catch(e){}
+  allItems = SAMPLE.map(i => overrides[i.name]!==undefined
+    ? {...i, price_kwd: parseFloat(overrides[i.name]).toFixed(3)}
+    : i
+  );
   buildTabs(CATS);
   render('all');
 }
