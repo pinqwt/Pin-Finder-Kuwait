@@ -942,6 +942,28 @@ form.search-wrap { border:none; outline:none; }
   margin-top: 2px;
   width: fit-content;
 }
+.feat-price-old {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  text-decoration: line-through;
+  margin-top: 4px;
+}
+.feat-price.feat-price-sale {
+  color: var(--red);
+  margin-top: 0;
+}
+.feat-sale-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: var(--red);
+  color: #fff;
+  margin-top: 2px;
+  width: fit-content;
+}
 
 /* ══════════════════════════════════════════════════════════════
    BUILD YOUR PC — drawer

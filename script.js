@@ -99,14 +99,18 @@ let _hiddenIds   = new Set();
 // Per-product SEO overrides (description + keywords) set in admin → SEO tab.
 // Keyed by product id, e.g. { "12": { desc: "...", keywords: "a, b, c" } }.
 let _sbProductSEO = {};
+// Homepage featured strip — ordered array of { id, sale } set in
+// admin → Featured tab. sale (0-95) discounts the price only in the strip.
+let _sbFeatured = [];
 
 async function loadSBData() {
-  const [s, p, c, h, seo] = await Promise.all([
+  const [s, p, c, h, seo, fo] = await Promise.all([
     sbFetch(SB_URL + '/rest/v1/capslock_stock?select=*',           { headers: SB_H }),
     sbFetch(SB_URL + '/rest/v1/capslock_photos?select=*',          { headers: SB_H }),
     sbFetch(SB_URL + '/rest/v1/capslock_products?select=*',        { headers: SB_H }),
     sbFetch(SB_URL + '/rest/v1/capslock_hidden?select=product_id', { headers: SB_H }),
-    sbFetch(SB_URL + '/rest/v1/capslock_settings?key=eq.product_seo&select=value', { headers: SB_H })
+    sbFetch(SB_URL + '/rest/v1/capslock_settings?key=eq.product_seo&select=value', { headers: SB_H }),
+    sbFetch(SB_URL + '/rest/v1/capslock_settings?key=eq.featured_offers&select=value', { headers: SB_H })
   ]);
   if (s.error) {
     try { _sbStock  = JSON.parse(localStorage.getItem('capslock_stock')  || '{}'); } catch(_) {}
@@ -123,7 +127,14 @@ async function loadSBData() {
   if (!seo.error && Array.isArray(seo.data) && seo.data[0] && seo.data[0].value) {
     try { _sbProductSEO = JSON.parse(seo.data[0].value); } catch(_) {}
   }
+  if (!fo.error && Array.isArray(fo.data) && fo.data[0] && fo.data[0].value) {
+    try {
+      var raw = JSON.parse(fo.data[0].value) || [];
+      _sbFeatured = raw.map(x => (typeof x === 'number') ? { id: x, sale: 0 } : { id: x.id, sale: x.sale || 0 });
+    } catch(_) {}
+  }
   renderProducts();
+  initFeaturedTicker();
   _injectProductSchema();
 }
 
@@ -553,20 +564,29 @@ function initFeaturedTicker() {
   const track = document.getElementById('featuredTrack');
   if (!track) return;
   const all = getAllProducts();
-  const featured = [
-    ...all.filter(p => p.badge && (p.badge.includes('New') || p.badge.includes('🔥'))),
-    ...all.filter(p => p.badge === 'Best Seller'),
-    ...all.filter(p => p.badge === 'Popular')
-  ].filter((p,i,a) => a.findIndex(x=>x.id===p.id)===i).slice(0, 18);
-  const cards = featured.map(p => `
+  // Admin-picked list (admin → Featured tab) — order is display order, sale
+  // is a strip-only discount that doesn't touch the product's real price
+  // anywhere else (cart, checkout, its own page).
+  const featured = _sbFeatured
+    .map(item => { const p = all.find(x => x.id === item.id); return p ? Object.assign({}, p, { _sale: item.sale || 0 }) : null; })
+    .filter(Boolean);
+  if (!featured.length) { track.innerHTML = ''; return; }
+  const cards = featured.map(p => {
+    const hasSale = p._sale > 0;
+    const offerPrice = hasSale ? p.price * (1 - p._sale / 100) : p.price;
+    const priceHtml = hasSale
+      ? `<div class="feat-price-old">${p.price.toFixed(3)} KWD</div><div class="feat-price feat-price-sale">${offerPrice.toFixed(3)} KWD</div>`
+      : `<div class="feat-price">${p.price.toFixed(3)} KWD</div>`;
+    return `
     <div class="feat-card" onclick="openProductModal(${p.id})">
       <div class="feat-img-wrap"><img src="${p.img}" alt="${p.name}" onerror="this.src='https://picsum.photos/seed/pc${p.id}/200/140'"/></div>
       <div class="feat-info">
-        ${p.badge ? `<span class="feat-badge">${p.badge}</span>` : ''}
+        ${hasSale ? `<span class="feat-sale-badge">-${p._sale}%</span>` : (p.badge ? `<span class="feat-badge">${p.badge}</span>` : '')}
         <div class="feat-name">${p.name}</div>
-        <div class="feat-price">${p.price.toFixed(3)} KWD</div>
+        ${priceHtml}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   track.innerHTML = cards + cards; // duplicate for seamless loop
 }
 
@@ -950,7 +970,7 @@ document.getElementById('contactForm').addEventListener('submit', e => {
 
 renderProducts();
 loadSBData();
-setTimeout(() => { initBuildSlots(); initFeaturedTicker(); }, 400);
+setTimeout(() => { initBuildSlots(); }, 400);
 
 // ── Scroll fade-in observer ──────────────────────────────────────────────────
 (function() {

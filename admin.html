@@ -591,6 +591,9 @@
     <button class="tab-btn" id="tabCategories" onclick="switchTab('categories')">
       <i class="fa fa-th-large"></i> Categories
     </button>
+    <button class="tab-btn" id="tabFeatured" onclick="switchTab('featured')">
+      <i class="fa fa-star"></i> Featured
+    </button>
     <button class="tab-btn" id="tabSeo" onclick="switchTab('seo')">
       <i class="fa fa-search-plus"></i> SEO
     </button>
@@ -882,6 +885,48 @@
       <h2><i class="fa fa-th-large" style="color:var(--orange);margin-right:8px"></i>Edit Category Images</h2>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px" id="catEditGrid"></div>
+  </div>
+
+  <!-- FEATURED SECTION -->
+  <div id="featuredSection" class="main" style="display:none">
+    <div class="table-top">
+      <h2><i class="fa fa-star" style="color:var(--orange);margin-right:8px"></i>Featured Products (Homepage Strip)</h2>
+      <div class="ctrl-right">
+        <div class="search-bar"><i class="fa fa-search" style="color:#aaa"></i><input type="text" id="foSearch" placeholder="Search products or SKU..." oninput="foFilter()" autocomplete="off" /></div>
+        <select class="filter-sel" id="foCatFilter" onchange="foFilter()"></select>
+        <button class="ur-btn" id="foSelectAllBtn" onclick="foSelectAllVisible()"><i class="fa fa-check-square"></i> Select All</button>
+        <span id="foCount" style="font-size:13px;color:var(--gray);font-weight:800;white-space:nowrap"></span>
+        <button class="save-btn" onclick="saveFeaturedOffers()"><i class="fa fa-check"></i> Save Featured Products</button>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--gray);margin:-6px 0 16px;max-width:720px">
+      Click a row to feature it in the homepage's scrolling strip — the order you click them in is the
+      order they appear on the site. Filter by category and use Select All to feature a whole group at
+      once — click it again to unfeature that same group. Set a Sale % on any row to show a discounted offer
+      price there (regular price crossed out, offer price shown first) — the product's real price everywhere
+      else (cart, checkout, its own page) is untouched. Leave none selected to hide the strip entirely.
+    </p>
+
+    <!-- BULK SALE BAR — search/filter for a group, Select All, then set one
+         Sale % for all of them here instead of typing it into every row. -->
+    <div class="bulk-bar show" id="foBulkBar">
+      <span class="bulk-sel-count" id="foBulkCount">0 selected here</span>
+      <input type="number" id="foBulkSale" min="0" max="95" placeholder="Sale %" style="width:70px;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;font-size:12px;text-align:center;font-family:inherit" />
+      <button class="bulk-btn" onclick="foApplyBulkSale()"><i class="fa fa-tag"></i> Apply Sale to Selected</button>
+      <button class="bulk-btn" onclick="foClearBulkSale()"><i class="fa fa-times"></i> Clear Sale from Selected</button>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="chk-col"><input type="checkbox" id="foSelectAll" title="Select/unselect all (filtered)" onchange="foToggleSelectAll()" /></th>
+            <th>Product</th><th>Category</th><th>Price KWD</th><th>Sale %</th><th>Description</th>
+          </tr>
+        </thead>
+        <tbody id="foTblBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- SEO SECTION -->
@@ -1565,6 +1610,161 @@ function getAllAdminProducts() {
   return [...base, ...custom].sort(function(a,b){return a.id-b.id;});
 }
 
+// ── FEATURED PRODUCTS (homepage strip) ────────────────────────────────────────
+// Admin picks any number of real products (no cap), each optionally with a
+// Sale % that discounts its price only in the homepage strip (the product's
+// real price everywhere else — cart, checkout, its own page — is untouched).
+// Stored in capslock_settings key 'featured_offers' as a JSON array of
+// { id, sale } objects — array order is also the display order on the
+// storefront, and 'sale' is the % off (0/absent = no sale).
+var _foItems = []; // ordered array of { id, sale } (pending save)
+
+function _foFind(id) { return _foItems.find(function(x) { return x.id === id; }); }
+function _foOfferPrice(price, sale) { return sale > 0 ? price * (1 - sale / 100) : price; }
+
+async function renderFeaturedTab() {
+  var res = await sbFetch(SB_URL + '/rest/v1/capslock_settings?key=eq.featured_offers&select=value', { headers: SB_HDRS });
+  var raw = [];
+  if (!res.error && Array.isArray(res.data) && res.data[0] && res.data[0].value) {
+    try { raw = JSON.parse(res.data[0].value) || []; } catch(e) {}
+  }
+  _foItems = raw.map(function(x) { return (typeof x === 'number') ? { id: x, sale: 0 } : { id: x.id, sale: x.sale || 0 }; });
+  document.getElementById('foSearch').value = '';
+  var catSel = document.getElementById('foCatFilter');
+  catSel.innerHTML = '<option value="all">All Categories</option>' +
+    CAT_DEFS.filter(function(c){ return c.slug !== 'all'; }).map(function(c) { return '<option value="' + c.slug + '">' + c.label + '</option>'; }).join('');
+  catSel.value = 'all';
+  _foRenderList('');
+  _foUpdateCount();
+}
+function _foUpdateCount() {
+  var el = document.getElementById('foCount');
+  if (el) el.textContent = _foItems.length + ' selected';
+}
+// Products currently matching the search box + category filter — shared by
+// rendering, Select All, and the header checkbox's tri-state sync.
+function _foFilteredList(q) {
+  q = (q || '').toLowerCase();
+  var catF = (document.getElementById('foCatFilter') || { value: 'all' }).value;
+  return getAllAdminProducts().filter(function(p) {
+    var matchesQ = !q || p.name.toLowerCase().indexOf(q) !== -1 || getProductSku(p.id).toLowerCase().indexOf(q) !== -1;
+    var matchesCat = catF === 'all' || p.cat === catF;
+    return matchesQ && matchesCat;
+  });
+}
+function _foRenderList(q) {
+  var photos = {};
+  try { photos = JSON.parse(localStorage.getItem('capslock_photos') || '{}'); } catch(e) {}
+  var list = _foFilteredList(q);
+  var rows = list.map(function(p) {
+    var item = _foFind(p.id);
+    var ck = !!item;
+    var sale = item ? item.sale : 0;
+    var rawPh = photos[p.id];
+    var thumb = (rawPh && (rawPh.indexOf('http') === 0 || rawPh.indexOf('data:') === 0)) ? rawPh : (p.img || '');
+    var catDef = CAT_DEFS.find(function(c){ return c.slug === p.cat; });
+    var priceCell = sale > 0
+      ? '<div><div style="text-decoration:line-through;color:#aaa;font-size:11px">' + p.price.toFixed(3) + '</div>' +
+        '<div style="font-weight:800;color:var(--red)">' + _foOfferPrice(p.price, sale).toFixed(3) + '</div></div>'
+      : '<span style="font-weight:700">' + p.price.toFixed(3) + '</span>';
+    var saleCell = '<div style="display:flex;align-items:center;gap:5px" onclick="event.stopPropagation()">' +
+      '<input type="number" min="0" max="95" placeholder="—" value="' + (sale > 0 ? sale : '') + '" ' +
+        'style="width:54px;padding:6px 7px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;text-align:center;font-family:inherit" ' +
+        'onchange="foSetSale(' + p.id + ',this.value)" />' +
+      '<span style="font-size:11px;color:var(--gray)">%</span>' +
+      (sale > 0 ? '<button onclick="foSetSale(' + p.id + ',0)" title="Clear sale" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:12px;padding:2px"><i class="fa fa-times"></i></button>' : '') +
+    '</div>';
+    return '<tr class="' + (ck ? 'fo-row-selected' : '') + '" onclick="foToggle(' + p.id + ')" style="cursor:pointer' + (ck ? ';background:rgba(255,152,0,.06)' : '') + '">' +
+      '<td class="chk-col"><input type="checkbox" style="pointer-events:none"' + (ck ? ' checked' : '') + ' /></td>' +
+      '<td><div style="display:flex;align-items:center;gap:11px">' +
+        (thumb ? '<img class="prod-img" src="' + thumb + '" onerror="this.style.opacity=0.3" />' : '<div class="prod-img" style="background:var(--light)"></div>') +
+        '<div><div class="prod-name">' + encodeHtml(p.name) + '</div><div class="prod-sku">' + getProductSku(p.id) + '</div></div>' +
+      '</div></td>' +
+      '<td><span class="cat-pill">' + encodeHtml(catDef ? catDef.label : (p.cat || '').replace(/-/g, ' ')) + '</span></td>' +
+      '<td>' + priceCell + '</td>' +
+      '<td>' + saleCell + '</td>' +
+      '<td style="max-width:320px;color:var(--gray);font-size:12px;font-weight:500">' + '' + '</td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('foTblBody').innerHTML = rows || '<tr><td colspan="6" style="color:#aaa;padding:20px;text-align:center">No products match this search.</td></tr>';
+  var nSel = list.filter(function(p) { return !!_foFind(p.id); }).length;
+  var allSelected = list.length > 0 && nSel === list.length;
+  var saChk = document.getElementById('foSelectAll');
+  if (saChk) {
+    saChk.checked = allSelected;
+    saChk.indeterminate = nSel > 0 && nSel < list.length;
+  }
+  var saBtn = document.getElementById('foSelectAllBtn');
+  if (saBtn) saBtn.innerHTML = '<i class="fa fa-check-square"></i> ' + (allSelected ? 'Unselect All' : 'Select All');
+  var bulkCount = document.getElementById('foBulkCount');
+  if (bulkCount) bulkCount.textContent = nSel + ' selected here';
+}
+function foFilter() { _foRenderList(document.getElementById('foSearch').value); }
+
+// ── SELECT ALL / UNSELECT ALL (respects the search + category filter; no cap)
+// — a real toggle: if everything currently shown is already featured, this
+// removes all of them; otherwise it features whatever's missing.
+function foToggleSelectAll() {
+  var q = document.getElementById('foSearch').value;
+  var list = _foFilteredList(q);
+  var allSelected = list.length > 0 && list.every(function(p) { return !!_foFind(p.id); });
+  if (allSelected) {
+    var ids = new Set(list.map(function(p) { return p.id; }));
+    _foItems = _foItems.filter(function(x) { return !ids.has(x.id); });
+  } else {
+    list.filter(function(p) { return !_foFind(p.id); }).forEach(function(p) { _foItems.push({ id: p.id, sale: 0 }); });
+  }
+  _foUpdateCount();
+  _foRenderList(q);
+}
+function foSelectAllVisible() { foToggleSelectAll(); }
+
+// ── BULK SALE (applies to whatever the search/category filter + your
+// selection currently show) ───────────────────────────────────────────────────
+function foApplyBulkSale() {
+  var pct = Math.max(0, Math.min(95, parseInt(document.getElementById('foBulkSale').value, 10) || 0));
+  var q = document.getElementById('foSearch').value;
+  var visibleIds = new Set(_foFilteredList(q).map(function(p) { return p.id; }));
+  var count = 0;
+  _foItems.forEach(function(item) { if (visibleIds.has(item.id)) { item.sale = pct; count++; } });
+  if (!count) { showToast('No selected products match the current search/filter'); return; }
+  _foRenderList(q);
+  showToast('Applied ' + pct + '% sale to ' + count + ' product' + (count === 1 ? '' : 's'));
+}
+function foClearBulkSale() {
+  var q = document.getElementById('foSearch').value;
+  var visibleIds = new Set(_foFilteredList(q).map(function(p) { return p.id; }));
+  var count = 0;
+  _foItems.forEach(function(item) { if (visibleIds.has(item.id) && item.sale > 0) { item.sale = 0; count++; } });
+  document.getElementById('foBulkSale').value = '';
+  _foRenderList(q);
+  showToast(count ? ('Cleared sale from ' + count + ' product' + (count === 1 ? '' : 's')) : 'Nothing to clear');
+}
+function foToggle(id) {
+  var idx = _foItems.findIndex(function(x) { return x.id === id; });
+  if (idx === -1) { _foItems.push({ id: id, sale: 0 }); } else { _foItems.splice(idx, 1); }
+  _foUpdateCount();
+  _foRenderList(document.getElementById('foSearch').value);
+}
+// Setting a sale % on a product that isn't featured yet features it first —
+// a sale price only means anything if it's actually shown in the strip.
+function foSetSale(id, rawVal) {
+  var pct = Math.max(0, Math.min(95, parseInt(rawVal, 10) || 0));
+  var item = _foFind(id);
+  if (!item) { item = { id: id, sale: 0 }; _foItems.push(item); }
+  item.sale = pct;
+  _foUpdateCount();
+  _foRenderList(document.getElementById('foSearch').value);
+}
+async function saveFeaturedOffers() {
+  var res = await sbFetch(SB_URL + '/rest/v1/capslock_settings', {
+    method: 'POST',
+    headers: Object.assign({}, SB_HDRS, { 'Prefer': 'resolution=merge-duplicates' }),
+    body: JSON.stringify([{ key: 'featured_offers', value: JSON.stringify(_foItems) }])
+  });
+  showToast(res.error ? 'Failed to save — check Supabase capslock_settings table' : 'Featured products saved!');
+}
+
 // ── SEO SETTINGS ─────────────────────────────────────────────────────────────
 // Lets the owner/admin edit the site's Google search title/description/keywords
 // without touching code. Stored in Supabase (capslock_settings, key
@@ -2232,6 +2432,7 @@ function switchTab(tab) {
   document.getElementById('salesSection').style.display      = tab==='sales'      ? 'block' : 'none';
   document.getElementById('reportsSection').style.display    = tab==='reports'    ? 'block' : 'none';
   document.getElementById('categoriesSection').style.display = tab==='categories' ? 'block' : 'none';
+  document.getElementById('featuredSection').style.display   = tab==='featured'   ? 'block' : 'none';
   document.getElementById('seoSection').style.display        = tab==='seo'        ? 'block' : 'none';
   document.getElementById('ownerSection').style.display      = tab==='owner'      ? 'block' : 'none';
   document.getElementById('tabInventory').classList.toggle('active',   tab==='inventory');
@@ -2241,6 +2442,7 @@ function switchTab(tab) {
   document.getElementById('tabSales').classList.toggle('active',       tab==='sales');
   document.getElementById('tabReports').classList.toggle('active',     tab==='reports');
   document.getElementById('tabCategories').classList.toggle('active',  tab==='categories');
+  document.getElementById('tabFeatured').classList.toggle('active',    tab==='featured');
   document.getElementById('tabSeo').classList.toggle('active',         tab==='seo');
   document.getElementById('tabOwner').classList.toggle('active',       tab==='owner');
   if (tab==='analytics')   renderAnalytics();
@@ -2249,6 +2451,7 @@ function switchTab(tab) {
   if (tab==='sales')       renderSales();
   if (tab==='reports')   { renderReports(); renderOrdersReport(); _autoWriteReports(); }
   if (tab==='categories')  renderCatEditor();
+  if (tab==='featured')    renderFeaturedTab();
   if (tab==='seo')       { loadSEOSettings(); renderSEOProducts(); }
   if (tab==='owner')       renderSuperAdmin();
 }
