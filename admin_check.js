@@ -1,5 +1,5 @@
-﻿const ADMIN_USER = 'rawaj';
-const ADMIN_PASS = 'admin1234';
+﻿const ADMIN_USER = 'capslock';
+const ADMIN_PASS = 'admin5678';
 
 // â”€â”€ SUPABASE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SB_URL  = 'https://sinzmodmefkyjkzzitjy.supabase.co';
@@ -7,13 +7,14 @@ const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 const SB_HDRS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
 
 const DEFAULT_CATS = [
-  { slug:'shataffa',     label:'Shataffa' },
-  { slug:'toilet-seats', label:'Toilet Seats' },
-  { slug:'lighting',     label:'Lighting' },
-  { slug:'taps',         label:'Taps & Mixers' },
-  { slug:'plumbing',     label:'Plumbing' },
-  { slug:'bathroom',     label:'Bathroom' },
-  { slug:'sanitaryware', label:'Sanitaryware' }
+  { slug:'gpu',          label:'GPU' },
+  { slug:'cpu',          label:'CPU' },
+  { slug:'motherboards', label:'Motherboards' },
+  { slug:'monitors',     label:'Monitors' },
+  { slug:'laptops',      label:'Laptops' },
+  { slug:'pre-builts',   label:'Pre-Builts' },
+  { slug:'peripherals',  label:'Peripherals' },
+  { slug:'other-parts',  label:'Other PC Parts' }
 ];
 
 // â”€â”€ SUPABASE FETCH WRAPPER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -32,9 +33,9 @@ async function sbFetch(url, options) {
 }
 
 const U  = id => 'https://picsum.photos/seed/' + id + '/80/80';
-const UL = id => 'product-images/' + id + '.jpg';
+const UL = id => 'Products/SKU-' + String(id).padStart(4,'0') + '.jpg';
 
-let _customProductRows = []; // populated from Supabase rawaj_products table
+let _customProductRows = []; // populated from Supabase capslock_products table
 let _hiddenBaseIds     = new Set();
 
 // ── ID CONFLICT RESOLVER ─────────────────────────────────────────────────────
@@ -62,9 +63,9 @@ async function _fixCustomProductIds() {
     var isTrueDupe = baseIds.has(p.id) && baseNames.has((p.name||'').toLowerCase().trim());
 
     // 1. Delete old entry from Supabase
-    await sbFetch(SB_URL + '/rest/v1/rawaj_products?id=eq.' + p.id, { method:'DELETE', headers:SB_HDRS });
+    await sbFetch(SB_URL + '/rest/v1/capslock_products?id=eq.' + p.id, { method:'DELETE', headers:SB_HDRS });
     // Also clean up orphaned stock/photos for old ID
-    await sbFetch(SB_URL + '/rest/v1/rawaj_stock?product_id=eq.' + p.id, { method:'DELETE', headers:SB_HDRS });
+    await sbFetch(SB_URL + '/rest/v1/capslock_stock?product_id=eq.' + p.id, { method:'DELETE', headers:SB_HDRS });
 
     // Remove from local array
     var idx = _customProductRows.findIndex(function(r){ return r.id === p.id; });
@@ -87,7 +88,7 @@ async function _fixCustomProductIds() {
       img_url: p.img_url || '',
       hidden: p.hidden || false
     };
-    var result = await sbFetch(SB_URL + '/rest/v1/rawaj_products', {
+    var result = await sbFetch(SB_URL + '/rest/v1/capslock_products', {
       method: 'POST',
       headers: Object.assign({}, SB_HDRS, {'Prefer':'return=representation'}),
       body: JSON.stringify([payload])
@@ -97,25 +98,25 @@ async function _fixCustomProductIds() {
       // Migrate stock to new ID
       var oldQty = stockData[p.id] || 50;
       stockData[result.data[0].id] = oldQty;
-      await sbFetch(SB_URL + '/rest/v1/rawaj_stock', {
+      await sbFetch(SB_URL + '/rest/v1/capslock_stock', {
         method: 'POST',
         headers: Object.assign({}, SB_HDRS, {'Prefer':'resolution=merge-duplicates'}),
         body: JSON.stringify([{ product_id: result.data[0].id, qty: oldQty }])
       });
       // Migrate photo to new ID
       var oldPhoto = null;
-      try { var ph = JSON.parse(localStorage.getItem('rawaj_photos')||'{}'); oldPhoto = ph[String(p.id)]||null; } catch(_){}
+      try { var ph = JSON.parse(localStorage.getItem('capslock_photos')||'{}'); oldPhoto = ph[String(p.id)]||null; } catch(_){}
       if (oldPhoto) {
-        sbFetch(SB_URL + '/rest/v1/rawaj_photos', {
+        sbFetch(SB_URL + '/rest/v1/capslock_photos', {
           method:'POST', headers:Object.assign({},SB_HDRS,{'Prefer':'resolution=merge-duplicates'}),
           body:JSON.stringify([{product_id:result.data[0].id, url:oldPhoto}])
         });
         // Update localStorage photo key
         try {
-          var ph2 = JSON.parse(localStorage.getItem('rawaj_photos')||'{}');
+          var ph2 = JSON.parse(localStorage.getItem('capslock_photos')||'{}');
           ph2[String(result.data[0].id)] = oldPhoto;
           delete ph2[String(p.id)];
-          localStorage.setItem('rawaj_photos', JSON.stringify(ph2));
+          localStorage.setItem('capslock_photos', JSON.stringify(ph2));
         } catch(_){}
       }
       console.log('[ID Fix] Moved', p.name, 'from ID', p.id, '→', result.data[0].id);
@@ -130,10 +131,10 @@ async function _fixCustomProductIds() {
 async function loadFromSupabase() {
   showToast('Loading from cloud…');
   const [s, p, c, h] = await Promise.all([
-    sbFetch(SB_URL + '/rest/v1/rawaj_stock?select=*',          { headers: SB_HDRS }),
-    sbFetch(SB_URL + '/rest/v1/rawaj_photos?select=*',         { headers: SB_HDRS }),
-    sbFetch(SB_URL + '/rest/v1/rawaj_products?select=*',       { headers: SB_HDRS }),
-    sbFetch(SB_URL + '/rest/v1/rawaj_hidden?select=product_id',{ headers: SB_HDRS })
+    sbFetch(SB_URL + '/rest/v1/capslock_stock?select=*',          { headers: SB_HDRS }),
+    sbFetch(SB_URL + '/rest/v1/capslock_photos?select=*',         { headers: SB_HDRS }),
+    sbFetch(SB_URL + '/rest/v1/capslock_products?select=*',       { headers: SB_HDRS }),
+    sbFetch(SB_URL + '/rest/v1/capslock_hidden?select=product_id',{ headers: SB_HDRS })
   ]);
 
   // Stock
@@ -142,16 +143,16 @@ async function loadFromSupabase() {
     showToast('Offline — using local data');
   } else if (Array.isArray(s.data)) {
     s.data.forEach(function(r) { stockData[r.product_id] = r.qty; });
-    localStorage.setItem('rawaj_stock', JSON.stringify(stockData));
+    localStorage.setItem('capslock_stock', JSON.stringify(stockData));
   }
 
   // Photos
   if (p.error) {
     console.warn('Photos load failed:', p.error);
   } else if (Array.isArray(p.data)) {
-    const ph = JSON.parse(localStorage.getItem('rawaj_photos') || '{}');
+    const ph = JSON.parse(localStorage.getItem('capslock_photos') || '{}');
     p.data.forEach(function(r) { ph[r.product_id] = r.url; });
-    localStorage.setItem('rawaj_photos', JSON.stringify(ph));
+    localStorage.setItem('capslock_photos', JSON.stringify(ph));
   }
 
   // Custom products
@@ -199,78 +200,101 @@ function getAllAdminProducts() {
 }
 
 const PRODUCTS = [
-  // SHATAFFA
-  {id:1,  name:'Stainless Steel Shataffa Sprayer',   cat:'shataffa',     price:3.500,  img:UL(1)},
-  {id:2,  name:'Wall-Mount Shataffa Set',            cat:'shataffa',     price:5.200,  img:UL(2)},
-  {id:3,  name:'Dual-Mode Bidet Sprayer',            cat:'shataffa',     price:7.800,  img:UL(3)},
-  {id:4,  name:'Clip-On Bidet Toilet Attachment',   cat:'shataffa',     price:4.500,  img:UL(4)},
-  {id:5,  name:'Braided Shataffa Hose 1.2m',        cat:'shataffa',     price:1.200,  img:UL(5)},
-  {id:6,  name:'Angle Valve with T-Connector',      cat:'shataffa',     price:1.800,  img:UL(6)},
-  {id:7,  name:'Brushed Nickel Bidet Sprayer',      cat:'shataffa',     price:8.500,  img:UL(7)},
-  {id:8,  name:'Shataffa Holder Hook Chrome',       cat:'shataffa',     price:0.800,  img:UL(8)},
-  {id:9,  name:'Hot & Cold Bidet Mixer Set',        cat:'shataffa',     price:12.000, img:UL(9)},
-  {id:10, name:'Non-Return Check Valve 1/2"',       cat:'shataffa',     price:0.600,  img:UL(10)},
-  // TOILET SEATS
-  {id:11, name:'Standard White Toilet Seat',        cat:'toilet-seats', price:4.500,  img:UL(11)},
-  {id:12, name:'Soft-Close Toilet Seat',            cat:'toilet-seats', price:9.800,  img:UL(12)},
-  {id:13, name:'Slim Soft-Close Toilet Seat',       cat:'toilet-seats', price:11.500, img:UL(13)},
-  {id:14, name:'D-Shape Soft-Close Seat',           cat:'toilet-seats', price:10.200, img:UL(14)},
-  {id:15, name:'Kids Toilet Training Seat',         cat:'toilet-seats', price:3.200,  img:UL(15)},
-  {id:16, name:'Quick-Release Toilet Seat',         cat:'toilet-seats', price:8.500,  img:UL(16)},
-  {id:17, name:'Elongated Toilet Seat White',       cat:'toilet-seats', price:6.800,  img:UL(17)},
-  {id:18, name:'Antibacterial Soft-Close Seat',     cat:'toilet-seats', price:14.500, img:UL(18)},
-  // LIGHTING
-  {id:19, name:'LED Bulb E27 9W Warm White',        cat:'lighting',     price:0.600,  img:UL(19)},
-  {id:20, name:'LED Bulb E27 12W Daylight',         cat:'lighting',     price:0.750,  img:UL(20)},
-  {id:21, name:'LED Bulb E14 6W Warm White',        cat:'lighting',     price:0.550,  img:UL(21)},
-  {id:22, name:'LED Spotlight GU10 7W',             cat:'lighting',     price:0.900,  img:UL(22)},
-  {id:23, name:'LED Recessed Downlight 12W',        cat:'lighting',     price:2.500,  img:UL(23)},
-  {id:24, name:'LED Strip Light 5m 12V',            cat:'lighting',     price:3.800,  img:UL(24)},
-  {id:25, name:'LED Panel Light 18W 30x30cm',       cat:'lighting',     price:4.500,  img:UL(25)},
-  {id:26, name:'LED Tube Light 18W 120cm',          cat:'lighting',     price:2.200,  img:UL(26)},
-  {id:27, name:'Smart RGB LED Bulb E27 10W',        cat:'lighting',     price:3.200,  img:UL(27)},
-  {id:28, name:'LED Outdoor Bulb IP65 12W',         cat:'lighting',     price:1.500,  img:UL(28)},
-  // TAPS & MIXERS
-  {id:29, name:'Basin Mixer Tap Chrome',            cat:'taps',         price:9.800,  img:UL(29)},
-  {id:30, name:'Kitchen Sink Mixer Tap',            cat:'taps',         price:11.500, img:UL(30)},
-  {id:31, name:'Pull-Out Kitchen Spray Tap',        cat:'taps',         price:18.500, img:UL(31)},
-  {id:32, name:'Bath & Shower Mixer Valve',         cat:'taps',         price:16.000, img:UL(32)},
-  {id:33, name:'Pillar Tap Pair Hot & Cold',        cat:'taps',         price:5.500,  img:UL(33)},
-  {id:34, name:'Wall-Mount Basin Mixer Tap',        cat:'taps',         price:14.000, img:UL(34)},
-  {id:35, name:'Thermostatic Shower Bar Set',       cat:'taps',         price:28.000, img:UL(35)},
-  {id:36, name:'Tap Aerator M22 Flow Saver',        cat:'taps',         price:0.400,  img:UL(36)},
-  {id:37, name:'Quarter-Turn Stop Cock 1/2"',       cat:'taps',         price:1.200,  img:UL(37)},
-  {id:38, name:'Tall Single Lever Basin Mixer',     cat:'taps',         price:13.500, img:UL(38)},
-  // PLUMBING
-  {id:39, name:'PVC Pressure Pipe 1/2" x 3m',      cat:'plumbing',     price:1.200,  img:UL(39)},
-  {id:40, name:'CPVC Hot Water Pipe 3/4" x 3m',    cat:'plumbing',     price:2.200,  img:UL(40)},
-  {id:41, name:'Braided Flexible Hose 40cm',        cat:'plumbing',     price:0.800,  img:UL(41)},
-  {id:42, name:'Braided Flexible Hose 60cm',        cat:'plumbing',     price:1.000,  img:UL(42)},
-  {id:43, name:'PTFE Teflon Tape 12m',              cat:'plumbing',     price:0.200,  img:UL(43)},
-  {id:44, name:'PVC Elbow 90° 1/2" — 10 Pack',     cat:'plumbing',     price:0.500,  img:UL(44)},
-  {id:45, name:'Brass Ball Valve 1/2"',             cat:'plumbing',     price:1.500,  img:UL(45)},
-  {id:46, name:'P-Trap Waste Bend 32mm',            cat:'plumbing',     price:1.200,  img:UL(46)},
-  {id:47, name:'Sanitary Silicone Sealant 280ml',   cat:'plumbing',     price:1.200,  img:UL(47)},
-  {id:48, name:'Drain Auger Cleaning Snake 5m',     cat:'plumbing',     price:3.500,  img:UL(48)},
-  // BATHROOM ACCESSORIES
-  {id:49, name:'Round Towel Ring Chrome',           cat:'bathroom',     price:3.200,  img:'Rawaj Products/SKU-0049.jpg'},
-  {id:50, name:'Toilet Roll Holder Chrome',         cat:'bathroom',     price:2.800,  img:'Rawaj Products/SKU-0050.jpg'},
-  {id:51, name:'Double Towel Bar 60cm Chrome',      cat:'bathroom',     price:5.500,  img:'Rawaj Products/SKU-0051.jpg'},
-  {id:52, name:'Wall-Mount Soap Dispenser',         cat:'bathroom',     price:4.200,  img:'Rawaj Products/SKU-0052.jpg'},
-  {id:53, name:'Frameless Bathroom Mirror 60x80',   cat:'bathroom',     price:12.000, img:'Rawaj Products/SKU-0053.jpg'},
-  {id:54, name:'Shower Curtain + 12 Rings 180x200', cat:'bathroom',     price:4.500,  img:'Rawaj Products/SKU-0054.jpg'},
-  {id:55, name:'Chrome Corner Shower Shelf',        cat:'bathroom',     price:6.800,  img:'Rawaj Products/SKU-0055.jpg'},
-  {id:56, name:'Double Robe Hook Chrome',           cat:'bathroom',     price:2.200,  img:'Rawaj Products/SKU-0056.jpg'},
-  // SANITARYWARE
-  {id:57, name:'Wall-Hung Basin 50cm White',        cat:'sanitaryware', price:35.000, img:'Rawaj Products/SKU-0057.jpg'},
-  {id:58, name:'Pedestal Basin 55cm White',         cat:'sanitaryware', price:28.000, img:'Rawaj Products/SKU-0058.jpg'},
-  {id:59, name:'Close-Coupled Toilet Suite',        cat:'sanitaryware', price:65.000, img:'Rawaj Products/SKU-0059.jpg'},
-  {id:60, name:'Concealed Cistern Frame',           cat:'sanitaryware', price:45.000, img:'Rawaj Products/SKU-0060.jpg'}
+  // GPU
+  {id:1,  name:'ASUS Dual RTX 5060 Ti OC 8GB',              cat:'gpu',          price:150.000, img:UL(1)},
+  {id:2,  name:'MSI RTX 5060 Ti Gaming Trio OC 16GB',       cat:'gpu',          price:175.000, img:UL(2)},
+  {id:3,  name:'Gigabyte RTX 5070 WindForce OC 12GB',       cat:'gpu',          price:215.000, img:UL(3)},
+  {id:4,  name:'ASUS TUF Gaming RTX 5070 Ti OC 16GB',       cat:'gpu',          price:310.000, img:UL(4)},
+  {id:5,  name:'MSI RTX 5080 Gaming Trio OC 16GB',          cat:'gpu',          price:435.000, img:UL(5)},
+  {id:6,  name:'ZOTAC RTX 5090 Solid OC 32GB',              cat:'gpu',          price:950.000, img:UL(6)},
+  {id:7,  name:'Sapphire Pulse RX 9060 XT 16GB',            cat:'gpu',          price:185.000, img:UL(7)},
+  {id:8,  name:'XFX Swift RX 9070 16GB',                    cat:'gpu',          price:265.000, img:UL(8)},
+  {id:9,  name:'Sapphire Nitro+ RX 9070 XT 16GB',           cat:'gpu',          price:310.000, img:UL(9)},
+  {id:10, name:'PowerColor Red Devil RX 9070 XT 16GB',      cat:'gpu',          price:325.000, img:UL(10)},
+  // CPU
+  {id:11, name:'Intel Core i9-14900K',                      cat:'cpu',          price:195.000, img:UL(11)},
+  {id:12, name:'Intel Core i9-14900KF',                     cat:'cpu',          price:180.000, img:UL(12)},
+  {id:13, name:'Intel Core i7-14700K',                      cat:'cpu',          price:154.000, img:UL(13)},
+  {id:14, name:'Intel Core i7-14700KF',                     cat:'cpu',          price:145.000, img:UL(14)},
+  {id:15, name:'Intel Core i5-14600K',                      cat:'cpu',          price:110.000, img:UL(15)},
+  {id:16, name:'AMD Ryzen 9 7950X3D',                       cat:'cpu',          price:310.000, img:UL(16)},
+  {id:17, name:'AMD Ryzen 9 7950X',                         cat:'cpu',          price:240.000, img:UL(17)},
+  {id:18, name:'AMD Ryzen 9 7900X',                         cat:'cpu',          price:122.000, img:UL(18)},
+  {id:19, name:'AMD Ryzen 7 7700X',                         cat:'cpu',          price:95.000,  img:UL(19)},
+  {id:20, name:'AMD Ryzen 5 7600X',                         cat:'cpu',          price:71.000,  img:UL(20)},
+  // MOTHERBOARDS
+  {id:21, name:'ASUS ROG Maximus Z790 Hero',                cat:'motherboards', price:214.000, img:UL(21)},
+  {id:22, name:'ASUS ROG Maximus Z790 Extreme',             cat:'motherboards', price:370.000, img:UL(22)},
+  {id:23, name:'ASUS ROG Maximus Z790 Dark Hero WiFi 7',    cat:'motherboards', price:285.000, img:UL(23)},
+  {id:24, name:'MSI MEG Z790 Godlike',                      cat:'motherboards', price:430.000, img:UL(24)},
+  {id:25, name:'MSI MAG Z790 Tomahawk WiFi',                cat:'motherboards', price:145.000, img:UL(25)},
+  {id:26, name:'Gigabyte Z790 AORUS Master',                cat:'motherboards', price:230.000, img:UL(26)},
+  {id:27, name:'ASUS ROG Strix X670E-E Gaming WiFi',        cat:'motherboards', price:176.000, img:UL(27)},
+  {id:28, name:'MSI MEG X670E ACE',                         cat:'motherboards', price:290.000, img:UL(28)},
+  {id:29, name:'Gigabyte X670E AORUS Master',               cat:'motherboards', price:210.000, img:UL(29)},
+  {id:30, name:'ASUS TUF Gaming B650-Plus WiFi',            cat:'motherboards', price:88.000,  img:UL(30)},
+  // MONITORS
+  {id:31, name:'ASUS ROG Swift OLED PG27AQDM 27',           cat:'monitors',     price:264.000, img:UL(31)},
+  {id:32, name:'ASUS ROG Swift QD-OLED PG27UCDM 27',        cat:'monitors',     price:361.000, img:UL(32)},
+  {id:33, name:'Samsung Odyssey G80SD 32 4K OLED',          cat:'monitors',     price:420.000, img:UL(33)},
+  {id:34, name:'Samsung Odyssey G7 28 4K 144Hz',            cat:'monitors',     price:175.000, img:UL(34)},
+  {id:35, name:'LG UltraGear 27GR95QE 27 OLED 240Hz',      cat:'monitors',     price:220.000, img:UL(35)},
+  {id:36, name:'LG UltraGear 27GP950-B 27 4K 160Hz',       cat:'monitors',     price:210.000, img:UL(36)},
+  {id:37, name:'MSI MAG 274QRF-QD 27 1440p 165Hz',         cat:'monitors',     price:120.000, img:UL(37)},
+  {id:38, name:'Gigabyte M27Q X 27 1440p 240Hz',            cat:'monitors',     price:145.000, img:UL(38)},
+  {id:39, name:'BenQ MOBIUZ EX2710S 27 1080p 165Hz',       cat:'monitors',     price:72.000,  img:UL(39)},
+  {id:40, name:'ASUS ProArt Display PA32UCG 32 4K',         cat:'monitors',     price:580.000, img:UL(40)},
+  // LAPTOPS
+  {id:41, name:'ASUS ROG Strix G16 2025 RTX 4080',          cat:'laptops',      price:890.000, img:UL(41)},
+  {id:42, name:'ASUS ROG Strix G18 2025 RTX 4090',          cat:'laptops',      price:1150.000,img:UL(42)},
+  {id:43, name:'ASUS ROG Zephyrus G16 OLED RTX 4070',       cat:'laptops',      price:850.000, img:UL(43)},
+  {id:44, name:'MSI Raider GE78 HX i9-14900HX RTX 4090',   cat:'laptops',      price:1300.000,img:UL(44)},
+  {id:45, name:'Lenovo Legion Pro 7i Gen 9 RTX 4080',       cat:'laptops',      price:920.000, img:UL(45)},
+  {id:46, name:'Lenovo Legion 5 Pro Gen 9 RTX 4070',        cat:'laptops',      price:500.000, img:UL(46)},
+  {id:47, name:'Razer Blade 16 2024 RTX 4090 OLED',         cat:'laptops',      price:1400.000,img:UL(47)},
+  {id:48, name:'HP OMEN 16 2024 i7-13700HX RTX 4070',       cat:'laptops',      price:480.000, img:UL(48)},
+  {id:49, name:'MSI Stealth 16 Mercedes-AMG RTX 4070 OLED', cat:'laptops',      price:990.000, img:UL(49)},
+  {id:50, name:'ASUS ROG Zephyrus M16 RTX 4060',            cat:'laptops',      price:620.000, img:UL(50)},
+  // PRE-BUILTS
+  {id:51, name:'Custom Entry Build i5-13400F + RTX 4060',   cat:'pre-builts',   price:289.000, img:UL(51)},
+  {id:52, name:'Custom Mid-Range i7-13700F + RTX 4070',     cat:'pre-builts',   price:520.000, img:UL(52)},
+  {id:53, name:'Custom AMD Mid Ryzen 7 7700X + RTX 4070S',  cat:'pre-builts',   price:560.000, img:UL(53)},
+  {id:54, name:'NZXT Player PC i7-14700K + RTX 4070 Ti',   cat:'pre-builts',   price:780.000, img:UL(54)},
+  {id:55, name:'NZXT Player Pro i9-14900K + RTX 4080 Super',cat:'pre-builts',   price:1050.000,img:UL(55)},
+  {id:56, name:'Custom Ryzen High 7900X + RTX 4080 Super',  cat:'pre-builts',   price:950.000, img:UL(56)},
+  {id:57, name:'Alienware Aurora R16 RTX 4070 Ti Super',    cat:'pre-builts',   price:1100.000,img:UL(57)},
+  {id:58, name:'Alienware Aurora R16 RTX 4090',             cat:'pre-builts',   price:1650.000,img:UL(58)},
+  {id:59, name:'Corsair One i300 Compact RTX 4090',         cat:'pre-builts',   price:1800.000,img:UL(59)},
+  {id:60, name:'Cooler Master Sneaker X i7 + RTX 4070 OC', cat:'pre-builts',   price:930.000, img:UL(60)},
+  // PERIPHERALS
+  {id:61, name:'Logitech G Pro X Superlight 2 Mouse',       cat:'peripherals',  price:49.000,  img:UL(61)},
+  {id:62, name:'Razer DeathAdder V3 Pro Wireless Mouse',     cat:'peripherals',  price:52.000,  img:UL(62)},
+  {id:63, name:'SteelSeries Aerox 9 Wireless Mouse',        cat:'peripherals',  price:68.000,  img:UL(63)},
+  {id:64, name:'Logitech G915 TKL Wireless Keyboard',       cat:'peripherals',  price:58.000,  img:UL(64)},
+  {id:65, name:'Razer BlackWidow V4 Pro Wireless Keyboard',  cat:'peripherals',  price:72.000,  img:UL(65)},
+  {id:66, name:'SteelSeries Apex Pro TKL 2023 Keyboard',    cat:'peripherals',  price:65.000,  img:UL(66)},
+  {id:67, name:'SteelSeries Arctis Nova Pro Wireless',      cat:'peripherals',  price:125.000, img:UL(67)},
+  {id:68, name:'Razer BlackShark V2 Pro 2023 Headset',      cat:'peripherals',  price:85.000,  img:UL(68)},
+  {id:69, name:'HyperX Cloud Alpha Wireless Headset',       cat:'peripherals',  price:62.000,  img:UL(69)},
+  {id:70, name:'Logitech C922 Pro Stream Webcam 1080p',     cat:'peripherals',  price:28.000,  img:UL(70)},
+  // GPU — RTX 5070
+  {id:71, name:'ASUS ROG Strix GeForce RTX 5070 OC 12GB',  cat:'gpu',          price:245.000, img:UL(71)},
+  // Other PC Parts
+  {id:72, name:'Corsair RM850x 850W 80+ Gold PSU',          cat:'other-parts',  price:38.000,  img:UL(72)},
+  {id:73, name:'be quiet! Dark Power 13 1000W 80+ Titanium',cat:'other-parts',  price:55.000,  img:UL(73)},
+  {id:74, name:'Corsair Vengeance DDR5 32GB 6000MHz Kit',   cat:'other-parts',  price:68.000,  img:UL(74)},
+  {id:75, name:'G.Skill Trident Z5 RGB DDR5 32GB 6400MHz',  cat:'other-parts',  price:85.000,  img:UL(75)},
+  {id:76, name:'Samsung 990 Pro 2TB NVMe M.2 PCIe 4.0',    cat:'other-parts',  price:75.000,  img:UL(76)},
+  {id:77, name:'WD Black SN850X 2TB NVMe M.2 PCIe 4.0',    cat:'other-parts',  price:70.000,  img:UL(77)},
+  {id:78, name:'NZXT Kraken 360 RGB AIO Liquid Cooler',     cat:'other-parts',  price:95.000,  img:UL(78)},
+  {id:79, name:'Lian Li LANCOOL III RGB Mid-Tower Case',    cat:'other-parts',  price:72.000,  img:UL(79)},
+  {id:80, name:'Corsair 5000D Airflow ATX Mid-Tower Case',  cat:'other-parts',  price:65.000,  img:UL(80)},
+  {id:81, name:'Noctua NH-D15 Premium CPU Air Cooler',      cat:'other-parts',  price:42.000,  img:UL(81)}
 ];
 
 // â”€â”€ STOCK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getStock() {
-  const s = localStorage.getItem('rawaj_stock');
+  const s = localStorage.getItem('capslock_stock');
   if (s) return JSON.parse(s);
   const d = {};
   PRODUCTS.forEach(p => { d[p.id] = p.price > 10 ? 15 : p.price > 5 ? 30 : 50; });
@@ -279,7 +303,7 @@ function getStock() {
 let stockData = getStock();
 
 let _prodOverrides = {};
-try { _prodOverrides = JSON.parse(localStorage.getItem('rawaj_overrides') || '{}'); } catch(e) {}
+try { _prodOverrides = JSON.parse(localStorage.getItem('capslock_overrides') || '{}'); } catch(e) {}
 
 // â”€â”€ UNDO / REDO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let _undoStack = [];
@@ -298,7 +322,7 @@ function undo() {
   if (!_undoStack.length) return;
   _redoStack.push(JSON.stringify(stockData));
   stockData = JSON.parse(_undoStack.pop());
-  localStorage.setItem('rawaj_stock', JSON.stringify(stockData));
+  localStorage.setItem('capslock_stock', JSON.stringify(stockData));
   renderTable(); renderStats(); _syncUrBtns();
   showToast('Undone â†©');
 }
@@ -306,7 +330,7 @@ function redo() {
   if (!_redoStack.length) return;
   _undoStack.push(JSON.stringify(stockData));
   stockData = JSON.parse(_redoStack.pop());
-  localStorage.setItem('rawaj_stock', JSON.stringify(stockData));
+  localStorage.setItem('capslock_stock', JSON.stringify(stockData));
   renderTable(); renderStats(); _syncUrBtns();
   showToast('Redone â†ª');
 }
@@ -325,7 +349,7 @@ function doLogin(e) {
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
   if (u === ADMIN_USER && p === ADMIN_PASS) {
-    localStorage.setItem('rawaj_auth', '1');
+    localStorage.setItem('capslock_auth', '1');
     // Tell the browser to offer saving these credentials
     if (window.PasswordCredential) {
       const cred = new PasswordCredential({ id: u, password: p, name: 'Rawaj Admin' });
@@ -346,14 +370,14 @@ function showAdmin() {
   loadOrders(false);
 }
 function logout() {
-  localStorage.removeItem('rawaj_auth');
+  localStorage.removeItem('capslock_auth');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('adminPanel').style.display = 'none';
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
 }
 // Auto-login if session is still active (survives page refresh)
-if (localStorage.getItem('rawaj_auth') === '1') { showAdmin(); }
+if (localStorage.getItem('capslock_auth') === '1') { showAdmin(); }
 
 // â”€â”€ CLOCK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function tick() {
@@ -385,8 +409,8 @@ function switchTab(tab) {
 // ── REPORTS ───────────────────────────────────────────────────────────────────
 function renderReports() {
   const all     = getAllAdminProducts();
-  const views   = JSON.parse(localStorage.getItem('rawaj_views')   || '{}');
-  const searches= JSON.parse(localStorage.getItem('rawaj_searches')|| '{}');
+  const views   = JSON.parse(localStorage.getItem('capslock_views')   || '{}');
+  const searches= JSON.parse(localStorage.getItem('capslock_searches')|| '{}');
   const now     = new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
   // ── INVENTORY ──────────────────────────────────────────────────────────────
@@ -481,15 +505,15 @@ function exportInventoryExcel() {
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
   var date = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, 'Rawaj_Inventory_'+date+'.xlsx');
+  XLSX.writeFile(wb, 'capslock_Inventory_'+date+'.xlsx');
   showToast('Inventory Excel downloaded ✅ — save it to your excel website management folder');
 }
 
 function exportSalesExcel() {
   if (typeof XLSX === 'undefined') { showToast('Excel library loading — try again'); return; }
   const all     = getAllAdminProducts();
-  const views   = JSON.parse(localStorage.getItem('rawaj_views')   || '{}');
-  const searches= JSON.parse(localStorage.getItem('rawaj_searches')|| '{}');
+  const views   = JSON.parse(localStorage.getItem('capslock_views')   || '{}');
+  const searches= JSON.parse(localStorage.getItem('capslock_searches')|| '{}');
   const salesData = all.map(function(p){
     return { p:p, cartAdds:views[p.id]||0, searchHits:searches[p.id]||0, estRev:((views[p.id]||0)*p.price) };
   }).sort(function(a,b){ return b.cartAdds - a.cartAdds; });
@@ -506,7 +530,7 @@ function exportSalesExcel() {
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Sales');
   var date = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, 'Rawaj_Sales_'+date+'.xlsx');
+  XLSX.writeFile(wb, 'capslock_Sales_'+date+'.xlsx');
   showToast('Sales Excel downloaded ✅ — save it to your excel website management folder');
 }
 
@@ -519,7 +543,7 @@ var _salesFileHandle = null;
 
 function _openFsDb() {
   return new Promise(function(resolve, reject) {
-    var req = indexedDB.open('rawaj_fs', 1);
+    var req = indexedDB.open('capslock_fs', 1);
     req.onupgradeneeded = function(e) { e.target.result.createObjectStore('handles'); };
     req.onsuccess  = function(e) { resolve(e.target.result); };
     req.onerror    = function(e) { reject(e.target.error); };
@@ -567,8 +591,8 @@ function _buildInventoryWorkbook() {
 
 function _buildSalesWorkbook() {
   var all     = getAllAdminProducts();
-  var views   = JSON.parse(localStorage.getItem('rawaj_views')   || '{}');
-  var searches= JSON.parse(localStorage.getItem('rawaj_searches')|| '{}');
+  var views   = JSON.parse(localStorage.getItem('capslock_views')   || '{}');
+  var searches= JSON.parse(localStorage.getItem('capslock_searches')|| '{}');
   var salesData = all.map(function(p){
     return { p:p, cartAdds:views[p.id]||0, searchHits:searches[p.id]||0, estRev:((views[p.id]||0)*p.price) };
   }).sort(function(a,b){ return b.cartAdds - a.cartAdds; });
@@ -611,7 +635,7 @@ async function connectInventoryFile() {
   }
   try {
     var handle = await window.showSaveFilePicker({
-      suggestedName: 'Rawaj_Inventory.xlsx',
+      suggestedName: 'capslock_Inventory.xlsx',
       startIn: 'documents',
       types: [{ description: 'Excel File', accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] } }]
     });
@@ -629,7 +653,7 @@ async function connectSalesFile() {
   }
   try {
     var handle = await window.showSaveFilePicker({
-      suggestedName: 'Rawaj_Sales.xlsx',
+      suggestedName: 'capslock_Sales.xlsx',
       startIn: 'documents',
       types: [{ description: 'Excel File', accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] } }]
     });
@@ -689,7 +713,7 @@ var _ordFileHandle   = null;
 
 async function loadOrders(showToastMsg) {
   if (showToastMsg) showToast('Loading orders…');
-  var res = await sbFetch(SB_URL + '/rest/v1/rawaj_orders?select=*&order=created_at.desc', { headers: SB_HDRS });
+  var res = await sbFetch(SB_URL + '/rest/v1/capslock_orders?select=*&order=created_at.desc', { headers: SB_HDRS });
   console.log('[Admin] loadOrders result:', res);
   if (res.error) {
     console.error('[Admin] Orders load FAILED:', res.error);
@@ -763,7 +787,7 @@ function renderOrdersTab() {
 
 async function updateOrderStatus(id, newStatus, selectEl) {
   selectEl.className = 'ord-status ' + newStatus;
-  var res = await sbFetch(SB_URL + '/rest/v1/rawaj_orders?id=eq.'+id, {
+  var res = await sbFetch(SB_URL + '/rest/v1/capslock_orders?id=eq.'+id, {
     method: 'PATCH',
     headers: Object.assign({}, SB_HDRS, {'Content-Type':'application/json','Prefer':'return=minimal'}),
     body: JSON.stringify({ status: newStatus })
@@ -803,7 +827,7 @@ function exportOrdersExcel() {
   if (!_allOrders.length) { showToast('No orders to export yet'); return; }
   var wb   = _buildOrdersWorkbook();
   var date = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, 'Rawaj_Orders_'+date+'.xlsx');
+  XLSX.writeFile(wb, 'capslock_Orders_'+date+'.xlsx');
   showToast('Orders Excel downloaded ✅');
 }
 
@@ -811,7 +835,7 @@ async function connectOrdersFile() {
   if (!window.showSaveFilePicker) { showToast('Use Chrome or Edge for auto-connect'); return; }
   try {
     var handle = await window.showSaveFilePicker({
-      suggestedName: 'Rawaj_Orders.xlsx',
+      suggestedName: 'capslock_Orders.xlsx',
       startIn: 'documents',
       types: [{ description: 'Excel File', accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] } }]
     });
@@ -896,9 +920,9 @@ function card(icon, cls, label, val, sub) {
 
 // â”€â”€ TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderTable() {
-  const photos   = JSON.parse(localStorage.getItem('rawaj_photos')||'{}');
-  const views    = JSON.parse(localStorage.getItem('rawaj_views')||'{}');
-  const searches = JSON.parse(localStorage.getItem('rawaj_searches')||'{}');
+  const photos   = JSON.parse(localStorage.getItem('capslock_photos')||'{}');
+  const views    = JSON.parse(localStorage.getItem('capslock_views')||'{}');
+  const searches = JSON.parse(localStorage.getItem('capslock_searches')||'{}');
   const q   = document.getElementById('adminSearch').value.toLowerCase();
   const cat = document.getElementById('catFilter').value;
   const list = getAllAdminProducts().filter(function(p) {
@@ -999,12 +1023,12 @@ async function saveAll() {
     if (ni) { if (!_prodOverrides[p.id]) _prodOverrides[p.id]={}; _prodOverrides[p.id].name = ni.value; }
     if (pi) { var pv=parseFloat(pi.value); if (!isNaN(pv)) { if (!_prodOverrides[p.id]) _prodOverrides[p.id]={}; _prodOverrides[p.id].price=pv; } }
   });
-  localStorage.setItem('rawaj_overrides', JSON.stringify(_prodOverrides));
+  localStorage.setItem('capslock_overrides', JSON.stringify(_prodOverrides));
 
   PRODUCTS.forEach(function(p) { const el=document.getElementById('si'+p.id); if(el) stockData[p.id]=Math.max(0,parseInt(el.value)||0); });
-  localStorage.setItem('rawaj_stock', JSON.stringify(stockData));
+  localStorage.setItem('capslock_stock', JSON.stringify(stockData));
   const rows = PRODUCTS.map(function(p) { return { product_id: p.id, qty: stockData[p.id]||0 }; });
-  const { error } = await sbFetch(SB_URL + '/rest/v1/rawaj_stock', {
+  const { error } = await sbFetch(SB_URL + '/rest/v1/capslock_stock', {
     method: 'POST',
     headers: Object.assign({}, SB_HDRS, { 'Prefer': 'resolution=merge-duplicates' }),
     body: JSON.stringify(rows)
@@ -1015,9 +1039,9 @@ async function saveAll() {
 
 // â”€â”€ ANALYTICS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderAnalytics() {
-  const views   = JSON.parse(localStorage.getItem('rawaj_views')||'{}');
-  const searches= JSON.parse(localStorage.getItem('rawaj_searches')||'{}');
-  const photos  = JSON.parse(localStorage.getItem('rawaj_photos')||'{}');
+  const views   = JSON.parse(localStorage.getItem('capslock_views')||'{}');
+  const searches= JSON.parse(localStorage.getItem('capslock_searches')||'{}');
+  const photos  = JSON.parse(localStorage.getItem('capslock_photos')||'{}');
 
   const totalViews   = Object.values(views).reduce(function(a,b){return a+b;},0);
   const totalSearches= Object.values(searches).reduce(function(a,b){return a+b;},0);
@@ -1075,13 +1099,13 @@ function buildAnTable(list, counts, photos, maxCount, barCls, unit) {
 }
 function resetViews() {
   if (!confirm('Reset all view data?')) return;
-  localStorage.removeItem('rawaj_views');
+  localStorage.removeItem('capslock_views');
   renderAnalytics(); renderTable();
   showToast('View data reset');
 }
 function resetSearches() {
   if (!confirm('Reset all search data?')) return;
-  localStorage.removeItem('rawaj_searches');
+  localStorage.removeItem('capslock_searches');
   renderAnalytics(); renderTable();
   showToast('Search data reset');
 }
@@ -1089,9 +1113,9 @@ function resetSearches() {
 // â”€â”€ PRODUCT STATS MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function openStats(id) {
   const p = PRODUCTS.find(function(x) { return x.id===id; });
-  const views   = JSON.parse(localStorage.getItem('rawaj_views')||'{}');
-  const searches= JSON.parse(localStorage.getItem('rawaj_searches')||'{}');
-  const photos  = JSON.parse(localStorage.getItem('rawaj_photos')||'{}');
+  const views   = JSON.parse(localStorage.getItem('capslock_views')||'{}');
+  const searches= JSON.parse(localStorage.getItem('capslock_searches')||'{}');
+  const photos  = JSON.parse(localStorage.getItem('capslock_photos')||'{}');
   const vCount  = views[id]||0;
   const sCount  = searches[id]||0;
 
@@ -1131,10 +1155,10 @@ async function toggleVisibility(id, isBase) {
   let err = null;
   if (isBase) {
     if (_hiddenBaseIds.has(id)) {
-      ({ error: err } = await sbFetch(SB_URL + '/rest/v1/rawaj_hidden?product_id=eq.' + id, { method:'DELETE', headers:SB_HDRS }));
+      ({ error: err } = await sbFetch(SB_URL + '/rest/v1/capslock_hidden?product_id=eq.' + id, { method:'DELETE', headers:SB_HDRS }));
       if (!err) _hiddenBaseIds.delete(id);
     } else {
-      ({ error: err } = await sbFetch(SB_URL + '/rest/v1/rawaj_hidden', {
+      ({ error: err } = await sbFetch(SB_URL + '/rest/v1/capslock_hidden', {
         method:'POST', headers:Object.assign({},SB_HDRS,{'Prefer':'resolution=merge-duplicates'}),
         body:JSON.stringify([{product_id:id, hidden:true}])
       }));
@@ -1144,7 +1168,7 @@ async function toggleVisibility(id, isBase) {
     const row = _customProductRows.find(function(p){ return p.id===id; });
     if (!row) return;
     const newHidden = !row.hidden;
-    ({ error: err } = await sbFetch(SB_URL + '/rest/v1/rawaj_products?id=eq.' + id, {
+    ({ error: err } = await sbFetch(SB_URL + '/rest/v1/capslock_products?id=eq.' + id, {
       method:'PATCH', headers:SB_HDRS, body:JSON.stringify({hidden:newHidden})
     }));
     if (!err) row.hidden = newHidden;
@@ -1160,23 +1184,23 @@ async function toggleVisibility(id, isBase) {
 // If user sets a custom SKU different from the product ID, it's stored here.
 function getProductSku(id) {
   try {
-    var map = JSON.parse(localStorage.getItem('rawaj_sku_map') || '{}');
+    var map = JSON.parse(localStorage.getItem('capslock_sku_map') || '{}');
     var val = map[String(id)];
     return 'SKU-' + String(val !== undefined ? val : id).padStart(4, '0');
   } catch(e) { return 'SKU-' + String(id).padStart(4, '0'); }
 }
 function setProductSku(id, skuNum) {
   try {
-    var map = JSON.parse(localStorage.getItem('rawaj_sku_map') || '{}');
+    var map = JSON.parse(localStorage.getItem('capslock_sku_map') || '{}');
     map[String(id)] = skuNum;
-    localStorage.setItem('rawaj_sku_map', JSON.stringify(map));
+    localStorage.setItem('capslock_sku_map', JSON.stringify(map));
   } catch(e) {}
 }
 function removeProductSku(id) {
   try {
-    var map = JSON.parse(localStorage.getItem('rawaj_sku_map') || '{}');
+    var map = JSON.parse(localStorage.getItem('capslock_sku_map') || '{}');
     delete map[String(id)];
-    localStorage.setItem('rawaj_sku_map', JSON.stringify(map));
+    localStorage.setItem('capslock_sku_map', JSON.stringify(map));
   } catch(e) {}
 }
 
@@ -1268,7 +1292,7 @@ async function saveNewProduct() {
     setProductSku(safeId, skuTyped);
   }
 
-  var { data: rows, error } = await sbFetch(SB_URL + '/rest/v1/rawaj_products', {
+  var { data: rows, error } = await sbFetch(SB_URL + '/rest/v1/capslock_products', {
     method:'POST',
     headers:Object.assign({},SB_HDRS,{'Prefer':'return=representation'}),
     body:JSON.stringify([{
@@ -1285,7 +1309,7 @@ async function saveNewProduct() {
     var newId = rows[0].id;
     var qty   = parseInt(document.getElementById('apStock').value) || 50;
     stockData[newId] = qty;
-    await sbFetch(SB_URL + '/rest/v1/rawaj_stock', {
+    await sbFetch(SB_URL + '/rest/v1/capslock_stock', {
       method:'POST', headers:Object.assign({},SB_HDRS,{'Prefer':'resolution=merge-duplicates'}),
       body:JSON.stringify([{product_id:newId, qty}])
     });
@@ -1295,10 +1319,10 @@ async function saveNewProduct() {
         var ext2 = (_apPendingFile.name.split('.').pop()||'jpg').toLowerCase();
         var blob = await fetch(imgUrl).then(r=>r.blob());
         var finalUrl = await uploadToStorage(blob, newId, ext2);
-        var photos = JSON.parse(localStorage.getItem('rawaj_photos')||'{}');
+        var photos = JSON.parse(localStorage.getItem('capslock_photos')||'{}');
         photos[newId] = finalUrl;
-        localStorage.setItem('rawaj_photos', JSON.stringify(photos));
-        await sbFetch(SB_URL + '/rest/v1/rawaj_photos', {
+        localStorage.setItem('capslock_photos', JSON.stringify(photos));
+        await sbFetch(SB_URL + '/rest/v1/capslock_photos', {
           method:'POST', headers:Object.assign({},SB_HDRS,{'Prefer':'resolution=merge-duplicates'}),
           body:JSON.stringify([{product_id:newId, url:finalUrl}])
         });
@@ -1315,14 +1339,14 @@ const _DELETED_TTL = 60 * 24 * 60 * 60 * 1000; // 60 days
 
 function getDeletedProducts() {
   try {
-    const raw = JSON.parse(localStorage.getItem('rawaj_deleted') || '[]');
+    const raw = JSON.parse(localStorage.getItem('fsi_deleted') || '[]');
     const cutoff = Date.now() - _DELETED_TTL;
     const valid = raw.filter(function(d){ return d.deletedAt > cutoff; });
-    if (valid.length !== raw.length) localStorage.setItem('rawaj_deleted', JSON.stringify(valid));
+    if (valid.length !== raw.length) localStorage.setItem('fsi_deleted', JSON.stringify(valid));
     return valid;
   } catch(e) { return []; }
 }
-function saveDeletedProducts(list) { localStorage.setItem('rawaj_deleted', JSON.stringify(list)); }
+function saveDeletedProducts(list) { localStorage.setItem('fsi_deleted', JSON.stringify(list)); }
 
 async function deleteProduct(id, isBase) {
   if (!confirm('Delete this product? It moves to the Deleted tab for 60 days — you can restore it any time.')) return;
@@ -1333,7 +1357,7 @@ async function deleteProduct(id, isBase) {
   deleted.push({ id:prod.id, name:prod.name, cat:prod.cat, price:prod.price, img:prod.img, isBase:prod.isBase, deletedAt:Date.now() });
   saveDeletedProducts(deleted);
   if (isBase) {
-    const { error } = await sbFetch(SB_URL + '/rest/v1/rawaj_hidden', {
+    const { error } = await sbFetch(SB_URL + '/rest/v1/capslock_hidden', {
       method:'POST', headers: Object.assign({},SB_HDRS,{'Prefer':'resolution=ignore-duplicates'}),
       body:JSON.stringify({ product_id: id })
     });
@@ -1341,9 +1365,9 @@ async function deleteProduct(id, isBase) {
     _hiddenBaseIds.add(id);
   } else {
     await Promise.all([
-      sbFetch(SB_URL + '/rest/v1/rawaj_products?id=eq.' + id,       { method:'DELETE', headers:SB_HDRS }),
-      sbFetch(SB_URL + '/rest/v1/rawaj_stock?product_id=eq.' + id,  { method:'DELETE', headers:SB_HDRS }),
-      sbFetch(SB_URL + '/rest/v1/rawaj_photos?product_id=eq.' + id, { method:'DELETE', headers:SB_HDRS })
+      sbFetch(SB_URL + '/rest/v1/capslock_products?id=eq.' + id,       { method:'DELETE', headers:SB_HDRS }),
+      sbFetch(SB_URL + '/rest/v1/capslock_stock?product_id=eq.' + id,  { method:'DELETE', headers:SB_HDRS }),
+      sbFetch(SB_URL + '/rest/v1/capslock_photos?product_id=eq.' + id, { method:'DELETE', headers:SB_HDRS })
     ]);
   }
   showToast('Deleted — restore from Deleted tab within 60 days');
@@ -1356,11 +1380,11 @@ async function restoreProduct(id, isBase) {
   const entry = deleted.find(function(d){ return d.id===id; });
   if (!entry) { showToast('Product not found'); return; }
   if (isBase) {
-    const { error } = await sbFetch(SB_URL + '/rest/v1/rawaj_hidden?product_id=eq.' + id, { method:'DELETE', headers:SB_HDRS });
+    const { error } = await sbFetch(SB_URL + '/rest/v1/capslock_hidden?product_id=eq.' + id, { method:'DELETE', headers:SB_HDRS });
     if (error) { showToast('Restore failed: ' + error); return; }
     _hiddenBaseIds.delete(id);
   } else {
-    const { error } = await sbFetch(SB_URL + '/rest/v1/rawaj_products', {
+    const { error } = await sbFetch(SB_URL + '/rest/v1/capslock_products', {
       method:'POST', headers:Object.assign({},SB_HDRS,{'Prefer':'return=representation'}),
       body:JSON.stringify([{ name:entry.name, category:entry.cat, price:entry.price, img_url:entry.img||'', hidden:false }])
     });
@@ -1383,7 +1407,7 @@ function renderDeletedTab() {
   const body = document.getElementById('deletedBody');
   if (!body) return;
   const deleted = getDeletedProducts().slice().sort(function(a,b){ return b.deletedAt-a.deletedAt; });
-  const photos  = JSON.parse(localStorage.getItem('rawaj_photos')||'{}');
+  const photos  = JSON.parse(localStorage.getItem('capslock_photos')||'{}');
   if (!deleted.length) {
     body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:48px;color:#aaa">' +
       '<i class="fa fa-trash" style="font-size:36px;display:block;margin-bottom:12px;color:#ddd"></i>' +
@@ -1629,7 +1653,7 @@ async function importCSVProducts() {
   let count = 0;
   // Load existing localStorage photos map
   let localPhotos = {};
-  try { localPhotos = JSON.parse(localStorage.getItem('rawaj_photos') || '{}'); } catch(_) {}
+  try { localPhotos = JSON.parse(localStorage.getItem('capslock_photos') || '{}'); } catch(_) {}
 
   for (let i = 0; i < _csvParsedRows.length; i++) {
     const r = _csvParsedRows[i];
@@ -1640,7 +1664,7 @@ async function importCSVProducts() {
     const imgDataUrl  = embeddedImg || namedImg;
     const imgUrl      = imgDataUrl || r.image_url || r.img_url || '';
 
-    const { data: rows, error } = await sbFetch(SB_URL + '/rest/v1/rawaj_products', {
+    const { data: rows, error } = await sbFetch(SB_URL + '/rest/v1/capslock_products', {
       method:'POST', headers:Object.assign({},SB_HDRS,{'Prefer':'return=representation'}),
       body:JSON.stringify([{
         name: r.name, category: r.category,
@@ -1656,7 +1680,7 @@ async function importCSVProducts() {
       const newId = rows[0].id;
       const qty   = parseInt(r.stock)||50;
       stockData[newId] = qty;
-      await sbFetch(SB_URL + '/rest/v1/rawaj_stock', {
+      await sbFetch(SB_URL + '/rest/v1/capslock_stock', {
         method:'POST', headers:Object.assign({},SB_HDRS,{'Prefer':'resolution=merge-duplicates'}),
         body:JSON.stringify([{product_id:newId, qty}])
       });
@@ -1664,7 +1688,7 @@ async function importCSVProducts() {
       if (imgDataUrl) {
         localPhotos[String(newId)] = imgDataUrl;
         // Also save to Supabase photos table
-        sbFetch(SB_URL + '/rest/v1/rawaj_photos', {
+        sbFetch(SB_URL + '/rest/v1/capslock_photos', {
           method:'POST', headers:Object.assign({},SB_HDRS,{'Prefer':'resolution=merge-duplicates'}),
           body:JSON.stringify([{product_id:newId, url:imgDataUrl}])
         });
@@ -1673,7 +1697,7 @@ async function importCSVProducts() {
     }
   }
   // Persist photos to localStorage
-  localStorage.setItem('rawaj_photos', JSON.stringify(localPhotos));
+  localStorage.setItem('capslock_photos', JSON.stringify(localPhotos));
   const imgCount = Object.keys(_rowImageMap).length || Object.keys(_csvImageMap).length;
   showToast(count + ' product'+(count!==1?'s':'')+' imported' + (imgCount ? ' with '+imgCount+' image'+(imgCount!==1?'s':'') : '') + '! ✅');
   closeCSV();
@@ -1689,7 +1713,7 @@ function downloadTemplate() {
   ].join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'rawaj_import_template.csv';
+  a.download = 'capslock_import_template.csv';
   a.click();
 }
 
@@ -1705,7 +1729,7 @@ function showToast(msg) {
 // DEFAULT_CATS moved to top of script
 
 function getCustomCats() {
-  return JSON.parse(localStorage.getItem('rawaj_categories') || '[]');
+  return JSON.parse(localStorage.getItem('fsi_categories') || '[]');
 }
 function getAllCats() {
   return [...DEFAULT_CATS, ...getCustomCats()];
@@ -1754,7 +1778,7 @@ function saveNewCat() {
   if (all.find(c => c.slug === slug)) { showToast('Category already exists'); return; }
   const custom = getCustomCats();
   custom.push({ slug, label: name });
-  localStorage.setItem('rawaj_categories', JSON.stringify(custom));
+  localStorage.setItem('fsi_categories', JSON.stringify(custom));
   document.getElementById('newCatInput').value = '';
   document.getElementById('newCatSlug').textContent = 'â€”';
   renderCatChips();
@@ -1764,7 +1788,7 @@ function saveNewCat() {
 function deleteCustomCat(slug) {
   if (!confirm('Delete this category? Products using it won\'t be affected.')) return;
   const custom = getCustomCats().filter(c => c.slug !== slug);
-  localStorage.setItem('rawaj_categories', JSON.stringify(custom));
+  localStorage.setItem('fsi_categories', JSON.stringify(custom));
   renderCatChips();
   refreshCategorySelects();
   showToast('Category deleted');
@@ -1785,7 +1809,7 @@ function openPhoto(id) {
   _croppedDataUrl = null;
   const p = getAllAdminProducts().find(function(x){ return x.id===id; });
   if (!p) return;
-  const photos = JSON.parse(localStorage.getItem('rawaj_photos')||'{}');
+  const photos = JSON.parse(localStorage.getItem('capslock_photos')||'{}');
   const src = photos[id] || p.img || '';
   document.getElementById('phProdName').textContent = '#'+id+' â€” '+p.name;
   document.getElementById('phUrlInput').value = src.startsWith('data:') ? '' : src;
@@ -2034,10 +2058,10 @@ async function bulkHide() {
     var p = getAllAdminProducts().find(function(x){return x.id===id;});
     if (!p || p.hidden) continue;
     if (p.isBase) {
-      await sbFetch(SB_URL+'/rest/v1/rawaj_hidden',{method:'POST',headers:Object.assign({},SB_HDRS,{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify([{product_id:id,hidden:true}])});
+      await sbFetch(SB_URL+'/rest/v1/capslock_hidden',{method:'POST',headers:Object.assign({},SB_HDRS,{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify([{product_id:id,hidden:true}])});
       _hiddenBaseIds.add(id);
     } else {
-      await sbFetch(SB_URL+'/rest/v1/rawaj_products?id=eq.'+id,{method:'PATCH',headers:SB_HDRS,body:JSON.stringify({hidden:true})});
+      await sbFetch(SB_URL+'/rest/v1/capslock_products?id=eq.'+id,{method:'PATCH',headers:SB_HDRS,body:JSON.stringify({hidden:true})});
       var row=_customProductRows.find(function(r){return r.id===id;}); if(row) row.hidden=true;
     }
   }
@@ -2052,10 +2076,10 @@ async function bulkShow() {
     var p = getAllAdminProducts().find(function(x){return x.id===id;});
     if (!p || !p.hidden) continue;
     if (p.isBase) {
-      await sbFetch(SB_URL+'/rest/v1/rawaj_hidden?product_id=eq.'+id,{method:'DELETE',headers:SB_HDRS});
+      await sbFetch(SB_URL+'/rest/v1/capslock_hidden?product_id=eq.'+id,{method:'DELETE',headers:SB_HDRS});
       _hiddenBaseIds.delete(id);
     } else {
-      await sbFetch(SB_URL+'/rest/v1/rawaj_products?id=eq.'+id,{method:'PATCH',headers:SB_HDRS,body:JSON.stringify({hidden:false})});
+      await sbFetch(SB_URL+'/rest/v1/capslock_products?id=eq.'+id,{method:'PATCH',headers:SB_HDRS,body:JSON.stringify({hidden:false})});
       var row=_customProductRows.find(function(r){return r.id===id;}); if(row) row.hidden=false;
     }
   }
@@ -2091,12 +2115,12 @@ async function bulkDelete() {
     deleted.push({id:p.id,name:p.name,cat:p.cat,price:p.price,img:p.img,isBase:p.isBase,deletedAt:Date.now()});
     saveDeletedProducts(deleted);
     if (p.isBase) {
-      await sbFetch(SB_URL+'/rest/v1/rawaj_hidden',{method:'POST',headers:Object.assign({},SB_HDRS,{'Prefer':'resolution=ignore-duplicates'}),body:JSON.stringify({product_id:id})});
+      await sbFetch(SB_URL+'/rest/v1/capslock_hidden',{method:'POST',headers:Object.assign({},SB_HDRS,{'Prefer':'resolution=ignore-duplicates'}),body:JSON.stringify({product_id:id})});
       _hiddenBaseIds.add(id);
     } else {
       await Promise.all([
-        sbFetch(SB_URL+'/rest/v1/rawaj_products?id=eq.'+id,{method:'DELETE',headers:SB_HDRS}),
-        sbFetch(SB_URL+'/rest/v1/rawaj_stock?product_id=eq.'+id,{method:'DELETE',headers:SB_HDRS})
+        sbFetch(SB_URL+'/rest/v1/capslock_products?id=eq.'+id,{method:'DELETE',headers:SB_HDRS}),
+        sbFetch(SB_URL+'/rest/v1/capslock_stock?product_id=eq.'+id,{method:'DELETE',headers:SB_HDRS})
       ]);
     }
   }
@@ -2109,15 +2133,15 @@ var _mcCurrentId = null;
 
 function getExtraCats(id) {
   try {
-    var map=JSON.parse(localStorage.getItem('rawaj_multi_cats')||'{}');
+    var map=JSON.parse(localStorage.getItem('capslock_multi_cats')||'{}');
     return Array.isArray(map[String(id)]) ? map[String(id)] : [];
   } catch(e){ return []; }
 }
 function saveExtraCats(id, cats) {
   try {
-    var map=JSON.parse(localStorage.getItem('rawaj_multi_cats')||'{}');
+    var map=JSON.parse(localStorage.getItem('capslock_multi_cats')||'{}');
     map[String(id)]=cats;
-    localStorage.setItem('rawaj_multi_cats',JSON.stringify(map));
+    localStorage.setItem('capslock_multi_cats',JSON.stringify(map));
   } catch(e){}
 }
 function getProductCatSlugs(p) {
@@ -2218,14 +2242,14 @@ async function savePhoto() {
   if (!finalUrl) return;
 
   // Save URL to localStorage + thumbnail
-  const photos = JSON.parse(localStorage.getItem('rawaj_photos')||'{}');
+  const photos = JSON.parse(localStorage.getItem('capslock_photos')||'{}');
   photos[currentPhotoId] = finalUrl;
-  localStorage.setItem('rawaj_photos', JSON.stringify(photos));
+  localStorage.setItem('capslock_photos', JSON.stringify(photos));
   const th = document.getElementById('thumb'+currentPhotoId);
   if (th) th.src = finalUrl;
 
-  // Save URL to Supabase rawaj_photos table
-  const { error: dbErr } = await sbFetch(SB_URL + '/rest/v1/rawaj_photos', {
+  // Save URL to Supabase capslock_photos table
+  const { error: dbErr } = await sbFetch(SB_URL + '/rest/v1/capslock_photos', {
     method: 'POST',
     headers: Object.assign({}, SB_HDRS, { 'Prefer': 'resolution=merge-duplicates' }),
     body: JSON.stringify([{ product_id: currentPhotoId, url: finalUrl }])
@@ -2236,3 +2260,9 @@ async function savePhoto() {
   closePhoto();
   showToast('Photo saved!');
 }
+
+
+
+
+
+

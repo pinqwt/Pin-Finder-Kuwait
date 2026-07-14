@@ -1,1567 +1,782 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="en" dir="ltr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VELOUR Beauty — فيلور بيوتي | Kuwait</title>
-<meta name="description" content="Luxury makeup & beauty in Kuwait. فيلور بيوتي — مستحضرات التجميل الفاخرة في الكويت.">
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-/* ════════════════════════════════════════════════════════════
-   TOKENS
-════════════════════════════════════════════════════════════ */
-:root {
-  --plum:       #1E0812;
-  --plum2:      #2D1020;
-  --plum3:      #3D1530;
-  --berry:      #7B1D4F;
-  --rose:       #C8607A;
-  --blush:      #EBA8B8;
-  --gold:       #C9956E;
-  --gold2:      #E2B99A;
-  --champagne:  #F5E6D8;
-  --ivory:      #FBF6F2;
-  --ivory2:     #F4EDE8;
-  --ivory3:     #EDE3DC;
-  --white:      #FFFCFA;
-  --text:       #1E0812;
-  --muted:      #7A5060;
-  --border:     #E8D4D0;
-  --green:      #3D7A5C;
-
-  --sh-sm:  0 2px 16px rgba(30,8,18,.07);
-  --sh:     0 8px 32px rgba(30,8,18,.12);
-  --sh-lg:  0 20px 64px rgba(30,8,18,.2);
-  --sh-glow:0 0 40px rgba(200,96,122,.25);
-  --r:      14px;
-  --r-lg:   22px;
-  --r-xl:   34px;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{
-  font-family:'Inter',sans-serif;
-  background:var(--ivory);
-  color:var(--text);
-  overflow-x:hidden;
-  line-height:1.6;
-}
-
-/* ── GRAIN TEXTURE ── */
-body::after{
-  content:'';
-  position:fixed;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.028'/%3E%3C/svg%3E");
-  pointer-events:none;z-index:9998;
-}
-
-/* ════════════════════ SPLASH ════════════════════ */
-#splash{
-  position:fixed;inset:0;z-index:9999;
-  background:var(--plum);
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  transition:opacity 1s ease, transform 1s ease;
-}
-#splash.hide{opacity:0;transform:translateY(-105%);pointer-events:none}
-.sp-logo{
-  font-family:'Cormorant Garamond',serif;
-  font-size:56px;font-weight:300;
-  letter-spacing:12px;text-transform:uppercase;
-  color:var(--champagne);margin-bottom:4px;
-}
-.sp-logo em{color:var(--gold);font-style:normal}
-.sp-tag{
-  font-size:11px;letter-spacing:4px;
-  text-transform:uppercase;color:var(--blush);
-  margin-bottom:8px;font-weight:300;
-}
-.sp-ar{
-  font-family:'Cairo',sans-serif;
-  font-size:18px;color:var(--gold2);
-  margin-bottom:40px;direction:rtl;font-weight:300;
-}
-.sp-line{
-  width:80px;height:1px;
-  background:linear-gradient(90deg,transparent,var(--gold),transparent);
-  margin-bottom:32px;
-}
-.sp-bar{width:160px;height:1px;background:rgba(255,255,255,.1);position:relative;overflow:hidden}
-.sp-fill{
-  position:absolute;inset:0;width:0;
-  background:linear-gradient(90deg,var(--rose),var(--gold));
-  animation:load 2.8s ease forwards;
-}
-@keyframes load{to{width:100%}}
-
-/* ════════════════════ NAV ════════════════════ */
-nav{
-  position:fixed;top:0;left:0;right:0;z-index:700;
-  padding:0 6%;
-  transition:all .4s ease;
-}
-nav.scrolled{
-  background:rgba(251,246,242,.97);
-  backdrop-filter:blur(24px) saturate(1.6);
-  border-bottom:1px solid var(--border);
-  box-shadow:var(--sh-sm);
-}
-.nav-i{
-  max-width:1200px;margin:0 auto;
-  height:76px;display:flex;
-  align-items:center;justify-content:space-between;
-}
-.nav-logo{display:flex;align-items:center;gap:14px;text-decoration:none}
-.nav-logo-mark{
-  width:42px;height:42px;
-  background:linear-gradient(135deg,var(--plum2),var(--berry));
-  border-radius:12px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;
-  box-shadow:0 4px 16px rgba(123,29,79,.35);
-}
-.nav-brand{
-  font-family:'Cormorant Garamond',serif;
-  font-size:22px;font-weight:600;
-  letter-spacing:3px;text-transform:uppercase;
-  color:var(--plum);
-}
-nav.scrolled .nav-brand{color:var(--plum)}
-nav:not(.scrolled) .nav-brand{color:var(--champagne)}
-.nav-links{display:flex;align-items:center;gap:2px;list-style:none}
-.nav-links a{
-  font-size:12px;font-weight:500;
-  letter-spacing:1.5px;text-transform:uppercase;
-  text-decoration:none;padding:8px 16px;border-radius:8px;
-  transition:all .2s;
-}
-nav.scrolled .nav-links a{color:var(--muted)}
-nav:not(.scrolled) .nav-links a{color:rgba(245,230,216,.75)}
-nav.scrolled .nav-links a:hover{background:var(--ivory2);color:var(--plum)}
-nav:not(.scrolled) .nav-links a:hover{color:var(--champagne)}
-.nav-cta{
-  background:linear-gradient(135deg,var(--rose),var(--berry));
-  color:white;border:none;
-  padding:11px 26px;border-radius:50px;
-  font-size:12px;font-weight:600;
-  letter-spacing:1.5px;text-transform:uppercase;
-  cursor:pointer;text-decoration:none;
-  transition:transform .2s,box-shadow .2s;
-  box-shadow:0 6px 20px rgba(200,96,122,.4);
-}
-.nav-cta:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(200,96,122,.5)}
-
-/* ════════════════════ HERO ════════════════════ */
-.hero{
-  min-height:100vh;
-  background:
-    linear-gradient(160deg,rgba(30,8,18,.82) 0%,rgba(45,16,32,.55) 50%,rgba(30,8,18,.88) 100%),
-    url('https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1900&q=85') center/cover no-repeat;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  text-align:center;
-  padding:110px 6% 120px;
-  position:relative;overflow:hidden;
-}
-.hero::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;
-  height:200px;
-  background:linear-gradient(to top,var(--ivory),transparent);
-  pointer-events:none;
-}
-/* floating orbs */
-.hero::before{
-  content:'';position:absolute;
-  width:600px;height:600px;border-radius:50%;
-  background:radial-gradient(circle,rgba(200,96,122,.15) 0%,transparent 70%);
-  top:50%;left:50%;transform:translate(-50%,-50%);
-  pointer-events:none;
-  animation:orb 6s ease-in-out infinite alternate;
-}
-@keyframes orb{0%{transform:translate(-50%,-50%) scale(1)}100%{transform:translate(-50%,-50%) scale(1.2)}}
-.hero-eyebrow{
-  display:inline-flex;align-items:center;gap:12px;
-  color:var(--gold2);font-size:11px;font-weight:500;
-  letter-spacing:3px;text-transform:uppercase;
-  margin-bottom:28px;
-}
-.hero-eyebrow::before,.hero-eyebrow::after{
-  content:'';width:40px;height:1px;
-  background:linear-gradient(90deg,transparent,var(--gold));
-}
-.hero-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(3.5rem,9vw,8.5rem);
-  font-weight:300;color:var(--champagne);
-  line-height:1;letter-spacing:-2px;
-  margin-bottom:6px;
-}
-.hero-title em{
-  font-style:italic;color:var(--blush);
-  font-weight:300;
-}
-.hero-title strong{
-  font-weight:600;color:var(--white);
-}
-.hero-ar{
-  font-family:'Cairo',sans-serif;
-  font-size:clamp(1rem,2.5vw,1.6rem);
-  color:var(--gold2);margin-bottom:28px;
-  direction:rtl;font-weight:300;letter-spacing:1px;
-}
-.hero-sub{
-  max-width:480px;color:rgba(245,230,216,.72);
-  font-size:clamp(14px,1.6vw,17px);
-  line-height:1.8;margin-bottom:48px;
-  font-weight:300;letter-spacing:.3px;
-}
-.hero-btns{
-  display:flex;gap:14px;flex-wrap:wrap;
-  justify-content:center;position:relative;z-index:1;
-}
-.btn-primary{
-  background:linear-gradient(135deg,var(--rose),var(--berry));
-  color:white;border:none;
-  padding:16px 40px;border-radius:50px;
-  font-size:12px;font-weight:600;
-  letter-spacing:2px;text-transform:uppercase;
-  cursor:pointer;text-decoration:none;
-  display:inline-flex;align-items:center;gap:10px;
-  transition:transform .25s,box-shadow .25s;
-  box-shadow:0 8px 30px rgba(200,96,122,.45);
-}
-.btn-primary:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(200,96,122,.55)}
-.btn-outline{
-  background:rgba(255,255,255,.07);
-  backdrop-filter:blur(10px);
-  color:var(--champagne);
-  border:1px solid rgba(245,230,216,.3);
-  padding:16px 40px;border-radius:50px;
-  font-size:12px;font-weight:500;
-  letter-spacing:2px;text-transform:uppercase;
-  cursor:pointer;text-decoration:none;
-  display:inline-flex;align-items:center;gap:10px;
-  transition:all .25s;
-}
-.btn-outline:hover{
-  border-color:rgba(245,230,216,.7);
-  background:rgba(255,255,255,.14);
-}
-.hero-chips{
-  display:flex;gap:12px;flex-wrap:wrap;
-  justify-content:center;margin-top:56px;
-  position:relative;z-index:1;
-}
-.hchip{
-  background:rgba(245,230,216,.08);
-  backdrop-filter:blur(10px);
-  border:1px solid rgba(245,230,216,.18);
-  color:rgba(245,230,216,.75);
-  font-size:11px;font-weight:500;
-  letter-spacing:1px;
-  padding:9px 22px;border-radius:50px;
-  text-transform:uppercase;
-}
-
-/* ════════════════════ MARQUEE ════════════════════ */
-.marquee-wrap{
-  background:var(--plum);
-  padding:18px 0;overflow:hidden;
-  border-top:1px solid rgba(200,96,122,.2);
-  border-bottom:1px solid rgba(200,96,122,.2);
-}
-.marquee-track{
-  display:flex;gap:0;white-space:nowrap;
-  animation:marquee 28s linear infinite;
-}
-@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.marquee-item{
-  display:inline-flex;align-items:center;gap:28px;
-  padding:0 28px;
-  font-family:'Cormorant Garamond',serif;
-  font-size:14px;font-weight:400;
-  letter-spacing:2px;text-transform:uppercase;
-  color:var(--gold2);
-}
-.marquee-dot{color:var(--rose);font-size:6px}
-
-/* ════════════════════ SECTION SHARED ════════════════════ */
-section{padding:100px 6%;position:relative;z-index:1}
-.slabel{
-  display:inline-flex;align-items:center;gap:10px;
-  font-size:10px;font-weight:600;
-  letter-spacing:3px;text-transform:uppercase;
-  color:var(--rose);margin-bottom:14px;
-}
-.slabel::before{
-  content:'';width:24px;height:1px;background:var(--rose);
-}
-.stitle{
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(2.4rem,5vw,4rem);
-  font-weight:300;color:var(--plum);
-  letter-spacing:-1px;margin-bottom:14px;
-  line-height:1.1;
-}
-.stitle em{font-style:italic;color:var(--rose)}
-.ssub{
-  color:var(--muted);font-size:16px;
-  max-width:500px;line-height:1.8;
-  font-weight:300;
-}
-.shdr{margin-bottom:60px}
-.shdr.c{text-align:center}
-.shdr.c .ssub{margin:0 auto}
-.shdr.c .slabel{justify-content:center}
-
-/* ════════════════════ STATS ════════════════════ */
-.stats-sec{
-  background:var(--plum2);
-  padding:56px 6%;
-}
-.stats-inner{
-  max-width:900px;margin:0 auto;
-  display:flex;justify-content:center;flex-wrap:wrap;
-}
-.stat{
-  text-align:center;padding:0 48px;
-  position:relative;
-}
-.stat:not(:last-child)::after{
-  content:'';position:absolute;right:0;top:50%;
-  transform:translateY(-50%);height:48px;width:1px;
-  background:rgba(245,230,216,.1);
-}
-.stat-num{
-  font-family:'Cormorant Garamond',serif;
-  font-size:3.2rem;font-weight:300;
-  color:var(--gold2);line-height:1;
-  letter-spacing:-1px;
-}
-.stat-label{
-  font-size:10px;color:var(--blush);
-  text-transform:uppercase;letter-spacing:2px;
-  margin-top:8px;font-weight:400;
-}
-
-/* ════════════════════ PRODUCTS / MENU ════════════════════ */
-.shop-sec{background:var(--white)}
-.cat-tabs{
-  display:flex;gap:10px;flex-wrap:wrap;margin-bottom:48px;
-}
-.ctab{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:10px 24px;border-radius:50px;
-  font-size:11px;font-weight:600;
-  letter-spacing:1.5px;text-transform:uppercase;
-  cursor:pointer;border:1.5px solid var(--border);
-  background:white;color:var(--muted);
-  transition:all .22s;user-select:none;
-}
-.ctab:hover{border-color:var(--rose);color:var(--berry)}
-.ctab.on{
-  background:var(--plum);color:var(--champagne);
-  border-color:var(--plum);
-  box-shadow:0 6px 20px rgba(30,8,18,.25);
-}
-.products-grid{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:24px;
-}
-.pcard{
-  background:var(--ivory);
-  border:1px solid var(--border);
-  border-radius:var(--r-lg);
-  overflow:hidden;cursor:pointer;
-  transition:all .3s cubic-bezier(.4,0,.2,1);
-  position:relative;
-  box-shadow:var(--sh-sm);
-}
-.pcard:hover{
-  transform:translateY(-8px);
-  box-shadow:var(--sh-lg);
-  border-color:var(--blush);
-}
-.pcard-img{
-  aspect-ratio:3/4;overflow:hidden;
-  background:var(--ivory2);
-  position:relative;
-}
-.pcard-img img{
-  width:100%;height:100%;
-  object-fit:contain;
-  transition:transform .5s cubic-bezier(.4,0,.2,1);
-}
-.pcard:hover .pcard-img img{transform:scale(1.06)}
-.pcard-emoji-ph{
-  width:100%;height:100%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:72px;
-  background:linear-gradient(135deg,var(--ivory2),var(--ivory3));
-}
-.pbadge{
-  position:absolute;top:14px;left:14px;
-  font-size:10px;font-weight:700;
-  padding:5px 14px;border-radius:50px;
-  letter-spacing:.8px;text-transform:uppercase;
-  backdrop-filter:blur(8px);
-}
-.pb-bestseller{background:rgba(30,8,18,.7);color:var(--gold2)}
-.pb-new{background:rgba(200,96,122,.85);color:white}
-.pb-limited{background:rgba(123,29,79,.8);color:var(--blush)}
-.pb-exclusive{background:rgba(201,149,110,.85);color:white}
-/* quick-add overlay */
-.pcard-overlay{
-  position:absolute;inset:0;
-  background:rgba(30,8,18,.45);
-  display:flex;align-items:center;justify-content:center;
-  opacity:0;transition:opacity .3s;
-}
-.pcard:hover .pcard-overlay{opacity:1}
-.quick-add{
-  background:white;color:var(--plum);
-  border:none;padding:12px 28px;border-radius:50px;
-  font-size:11px;font-weight:700;
-  letter-spacing:1.5px;text-transform:uppercase;
-  cursor:pointer;
-  transform:translateY(12px);
-  transition:transform .3s;
-  box-shadow:var(--sh);
-}
-.pcard:hover .quick-add{transform:translateY(0)}
-.quick-add:hover{background:var(--champagne)}
-.pcard-body{padding:20px 22px}
-.pcard-cat{
-  font-size:10px;font-weight:600;
-  letter-spacing:1.5px;text-transform:uppercase;
-  color:var(--rose);margin-bottom:6px;
-}
-.pcard-name{
-  font-family:'Cormorant Garamond',serif;
-  font-size:20px;font-weight:500;
-  color:var(--plum);margin-bottom:7px;
-  line-height:1.2;
-}
-.pcard-desc{
-  font-size:13px;color:var(--muted);
-  line-height:1.65;margin-bottom:16px;
-  font-weight:300;
-}
-.pcard-foot{
-  display:flex;align-items:center;
-  justify-content:space-between;
-  padding-top:14px;
-  border-top:1px solid var(--border);
-}
-.pprice{
-  font-family:'Cormorant Garamond',serif;
-  font-size:22px;font-weight:600;
-  color:var(--plum);
-}
-.pprice small{
-  font-family:'Inter',sans-serif;
-  font-size:11px;color:var(--muted);font-weight:400;
-  letter-spacing:.5px;
-}
-.padd-btn{
-  width:38px;height:38px;border-radius:50%;
-  background:linear-gradient(135deg,var(--rose),var(--berry));
-  color:white;border:none;
-  font-size:20px;cursor:pointer;line-height:1;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .2s;flex-shrink:0;
-  box-shadow:0 4px 14px rgba(200,96,122,.4);
-}
-.padd-btn:hover{transform:scale(1.12);box-shadow:0 6px 20px rgba(200,96,122,.55)}
-.menu-loading{
-  grid-column:1/-1;text-align:center;
-  padding:80px;color:var(--muted);
-}
-.spin{
-  display:inline-block;width:36px;height:36px;
-  border:2px solid var(--border);
-  border-top-color:var(--rose);
-  border-radius:50%;animation:spin .7s linear infinite;
-  margin-bottom:12px;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ════════════════════ FEATURED STRIP ════════════════════ */
-.featured-strip{
-  background:linear-gradient(135deg,var(--plum) 0%,var(--plum2) 40%,var(--plum3) 100%);
-  padding:90px 6%;
-  position:relative;overflow:hidden;
-}
-.featured-strip::before{
-  content:'';position:absolute;
-  width:700px;height:700px;border-radius:50%;
-  background:radial-gradient(circle,rgba(200,96,122,.12) 0%,transparent 70%);
-  top:50%;left:30%;transform:translate(-50%,-50%);
-  pointer-events:none;
-}
-.featured-grid{
-  max-width:1100px;margin:0 auto;
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:80px;align-items:center;
-}
-.featured-strip .slabel{color:var(--blush)}
-.featured-strip .stitle{color:var(--champagne)}
-.featured-strip .stitle em{color:var(--blush)}
-.featured-strip .ssub{color:rgba(235,168,184,.65)}
-.feat-bullets{
-  display:flex;flex-direction:column;gap:16px;
-  margin-top:32px;
-}
-.feat-bullet{
-  display:flex;align-items:center;gap:14px;
-  color:var(--champagne);font-size:14px;font-weight:300;
-  letter-spacing:.3px;
-}
-.feat-bullet::before{
-  content:'';width:24px;height:1px;flex-shrink:0;
-  background:linear-gradient(90deg,var(--rose),var(--gold));
-}
-.featured-img-wrap{
-  position:relative;
-}
-.featured-img{
-  width:100%;aspect-ratio:3/4;
-  border-radius:var(--r-xl);object-fit:cover;
-  box-shadow:var(--sh-lg);
-}
-.featured-badge{
-  position:absolute;bottom:-18px;left:-18px;
-  background:linear-gradient(135deg,var(--rose),var(--gold));
-  border-radius:var(--r-lg);
-  padding:20px 24px;text-align:center;
-  box-shadow:var(--sh-lg);
-}
-.featured-badge .big{
-  font-family:'Cormorant Garamond',serif;
-  font-size:2.2rem;font-weight:600;
-  color:white;line-height:1;
-}
-.featured-badge .sm{font-size:11px;color:rgba(255,255,255,.7);margin-top:5px;letter-spacing:1px;text-transform:uppercase}
-
-/* ════════════════════ ABOUT ════════════════════ */
-.about-sec{background:var(--ivory2)}
-.about-grid{
-  max-width:1100px;margin:0 auto;
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:80px;align-items:center;
-}
-.about-img-stack{
-  position:relative;height:540px;
-}
-.about-img-main{
-  position:absolute;right:0;top:0;
-  width:78%;aspect-ratio:3/4;
-  border-radius:var(--r-xl);
-  object-fit:cover;
-  box-shadow:var(--sh-lg);
-}
-.about-img-accent{
-  position:absolute;left:0;bottom:0;
-  width:55%;aspect-ratio:1;
-  border-radius:var(--r-lg);
-  object-fit:cover;
-  box-shadow:var(--sh-lg);
-  border:4px solid var(--white);
-}
-.about-float{
-  position:absolute;top:50%;right:-20px;
-  transform:translateY(-50%);
-  background:var(--plum);
-  border-radius:var(--r-lg);
-  padding:18px 22px;text-align:center;
-  box-shadow:var(--sh);
-}
-.about-float .big{
-  font-family:'Cormorant Garamond',serif;
-  font-size:2rem;font-weight:600;
-  color:var(--gold2);line-height:1;
-}
-.about-float .sm{font-size:10px;color:var(--blush);margin-top:4px;letter-spacing:1px;text-transform:uppercase}
-.values{display:flex;flex-direction:column;gap:18px;margin-top:36px}
-.value{
-  display:flex;gap:16px;align-items:flex-start;
-  background:white;padding:20px 22px;
-  border-radius:var(--r);border:1px solid var(--border);
-  box-shadow:var(--sh-sm);
-  transition:all .25s;
-}
-.value:hover{
-  border-color:var(--blush);
-  box-shadow:var(--sh);
-  transform:translateX(4px);
-}
-.value-ico{
-  width:46px;height:46px;flex-shrink:0;
-  background:linear-gradient(135deg,var(--ivory2),var(--ivory3));
-  border-radius:12px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:22px;border:1px solid var(--border);
-}
-.value h4{font-weight:600;color:var(--plum);margin-bottom:4px;font-size:15px}
-.value p{font-size:13px;color:var(--muted);line-height:1.65;font-weight:300}
-
-/* ════════════════════ INFO ════════════════════ */
-.info-sec{background:var(--white)}
-.info-grid{
-  max-width:1100px;margin:0 auto;
-  display:grid;grid-template-columns:1fr 1fr;gap:40px;
-}
-.icard{
-  background:var(--ivory);
-  border:1px solid var(--border);
-  border-radius:var(--r-lg);
-  padding:38px;box-shadow:var(--sh-sm);
-}
-.icard-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:24px;font-weight:500;color:var(--plum);
-  margin-bottom:28px;display:flex;align-items:center;gap:10px;
-}
-.hours-list{display:flex;flex-direction:column;gap:4px}
-.hrow{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:13px 0;border-bottom:1px solid var(--border);font-size:14px;
-}
-.hrow:last-child{border-bottom:none}
-.hday{font-weight:500;color:var(--plum)}
-.htime{color:var(--muted);font-weight:300}
-.open-pill{
-  display:inline-flex;align-items:center;gap:7px;
-  background:rgba(61,122,92,.08);border:1px solid rgba(61,122,92,.22);
-  color:var(--green);padding:6px 16px;border-radius:50px;
-  font-size:11px;font-weight:600;margin-bottom:26px;
-  letter-spacing:.5px;
-}
-.odot{
-  width:7px;height:7px;border-radius:50%;
-  background:var(--green);animation:pulse 1.8s infinite;
-}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.loc-list{display:flex;flex-direction:column;gap:12px}
-.litem{
-  display:flex;gap:14px;align-items:flex-start;
-  background:white;padding:16px 18px;
-  border-radius:var(--r);border:1px solid var(--border);
-  transition:border-color .2s;
-}
-.litem:hover{border-color:var(--blush)}
-.lico{
-  width:42px;height:42px;flex-shrink:0;
-  background:linear-gradient(135deg,var(--plum2),var(--berry));
-  border-radius:10px;display:flex;
-  align-items:center;justify-content:center;font-size:17px;
-}
-.litem h4{font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.8px}
-.litem p,.litem a{font-weight:500;color:var(--plum);text-decoration:none;font-size:14px}
-.litem a:hover{color:var(--rose)}
-
-/* ════════════════════ FOOTER ════════════════════ */
-footer{
-  background:var(--plum);
-  padding:60px 6% 32px;
-  color:var(--blush);
-}
-.foot-grid{
-  max-width:1100px;margin:0 auto;
-  display:grid;grid-template-columns:2fr 1fr 1fr;
-  gap:60px;margin-bottom:52px;
-}
-.foot-brand{
-  font-family:'Cormorant Garamond',serif;
-  font-size:28px;font-weight:300;
-  letter-spacing:6px;text-transform:uppercase;
-  color:var(--champagne);margin-bottom:14px;
-}
-.foot-brand em{color:var(--gold2);font-style:normal}
-.foot-desc{font-size:14px;line-height:1.8;color:rgba(235,168,184,.65);max-width:300px;font-weight:300}
-.foot-col h4{
-  color:var(--champagne);font-size:10px;font-weight:600;
-  text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;
-}
-.foot-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
-.foot-col a{color:rgba(235,168,184,.6);text-decoration:none;font-size:14px;font-weight:300;transition:color .2s}
-.foot-col a:hover{color:var(--champagne)}
-.foot-divider{
-  max-width:1100px;margin:0 auto;
-  border:none;border-top:1px solid rgba(245,230,216,.08);
-  margin-bottom:24px;
-}
-.foot-bot{
-  max-width:1100px;margin:0 auto;
-  text-align:center;font-size:12px;
-  color:rgba(235,168,184,.35);
-  letter-spacing:.5px;font-weight:300;
-}
-
-/* ════════════════════ CART FAB ════════════════════ */
-#cart-fab{
-  position:fixed;bottom:36px;right:36px;z-index:750;
-  width:64px;height:64px;border-radius:50%;
-  background:linear-gradient(135deg,var(--berry),var(--rose));
-  color:white;border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  font-size:24px;
-  box-shadow:0 8px 32px rgba(123,29,79,.4),var(--sh-glow);
-  transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s;
-}
-#cart-fab:hover{transform:scale(1.1);box-shadow:0 14px 42px rgba(123,29,79,.55)}
-#cart-fab.bump{animation:bump .35s cubic-bezier(.34,1.56,.64,1)}
-@keyframes bump{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
-#cart-count{
-  position:absolute;top:-3px;right:-3px;
-  background:var(--gold);color:var(--plum);
-  width:22px;height:22px;border-radius:50%;
-  font-size:11px;font-weight:800;
-  display:none;align-items:center;justify-content:center;
-  border:2px solid white;
-}
-#cart-count.show{display:flex}
-
-/* ════════════════════ CART DRAWER ════════════════════ */
-#cart-backdrop{
-  position:fixed;inset:0;background:rgba(30,8,18,.5);
-  backdrop-filter:blur(4px);z-index:800;
-  opacity:0;pointer-events:none;transition:opacity .3s;
-}
-#cart-backdrop.open{opacity:1;pointer-events:all}
-#cart-drawer{
-  position:fixed;right:0;top:0;bottom:0;z-index:801;
-  width:min(440px,100vw);
-  background:var(--white);
-  box-shadow:-12px 0 60px rgba(30,8,18,.2);
-  display:flex;flex-direction:column;
-  transform:translateX(110%);
-  transition:transform .4s cubic-bezier(.4,0,.2,1);
-}
-#cart-drawer.open{transform:translateX(0)}
-.cd-hdr{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:24px 28px;
-  background:linear-gradient(135deg,var(--plum),var(--plum2));
-  border-bottom:1px solid rgba(245,230,216,.1);
-}
-.cd-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:22px;font-weight:500;
-  letter-spacing:2px;text-transform:uppercase;
-  color:var(--champagne);
-  display:flex;align-items:center;gap:10px;
-}
-.cd-cls{
-  background:rgba(255,255,255,.1);border:none;
-  color:var(--champagne);width:36px;height:36px;
-  border-radius:9px;font-size:16px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:background .2s;
-}
-.cd-cls:hover{background:rgba(255,255,255,.2)}
-.cd-items{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
-.cd-empty{
-  flex:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  text-align:center;color:var(--muted);padding:40px;
-}
-.cd-empty-ico{font-size:52px;margin-bottom:14px;opacity:.4}
-.cd-empty p:first-of-type{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--plum);margin-bottom:6px}
-.cd-row{
-  display:flex;align-items:center;gap:14px;
-  background:var(--ivory);border:1px solid var(--border);
-  border-radius:var(--r);padding:14px 16px;
-  transition:border-color .2s;
-}
-.cd-row:hover{border-color:var(--blush)}
-.cd-row-emoji{font-size:26px;flex-shrink:0}
-.cd-row-info{flex:1;min-width:0}
-.cd-row-name{
-  font-weight:600;font-size:14px;color:var(--plum);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.cd-row-price{font-size:13px;color:var(--rose);font-weight:500;margin-top:2px}
-.cd-qty{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.cd-qty-btn{
-  width:28px;height:28px;border-radius:8px;border:none;
-  background:var(--ivory2);color:var(--plum);
-  font-size:16px;font-weight:700;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:background .2s;
-}
-.cd-qty-btn:hover{background:var(--ivory3)}
-.cd-qty-num{font-weight:700;font-size:14px;min-width:18px;text-align:center}
-.cd-footer{
-  padding:20px 24px;
-  border-top:1px solid var(--border);
-  background:var(--ivory);
-}
-.cd-subtotal{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:16px;
-}
-.cd-subtotal-label{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:1px;text-transform:uppercase}
-.cd-subtotal-val{
-  font-family:'Cormorant Garamond',serif;
-  font-size:26px;font-weight:600;color:var(--plum);
-}
-.cd-subtotal-val small{font-family:'Inter',sans-serif;font-size:12px;color:var(--muted);font-weight:400}
-.cd-checkout{
-  width:100%;padding:16px;
-  background:linear-gradient(135deg,var(--rose),var(--berry));
-  color:white;border:none;border-radius:50px;
-  font-size:12px;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:transform .2s,box-shadow .2s;
-  box-shadow:0 6px 24px rgba(200,96,122,.4);
-}
-.cd-checkout:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(200,96,122,.5)}
-.cd-clear{
-  width:100%;margin-top:10px;padding:11px;
-  background:none;border:1px solid var(--border);
-  border-radius:50px;color:var(--muted);
-  font-size:11px;font-weight:600;
-  letter-spacing:1.5px;text-transform:uppercase;
-  cursor:pointer;transition:all .2s;
-}
-.cd-clear:hover{border-color:var(--rose);color:var(--rose)}
-
-/* ════════════════════ TOAST ════════════════════ */
-#toast{
-  position:fixed;bottom:120px;right:36px;z-index:800;
-  background:var(--plum);color:var(--champagne);
-  border-radius:var(--r);padding:16px 22px;
-  box-shadow:var(--sh-lg);
-  display:flex;align-items:center;gap:12px;
-  font-size:14px;font-weight:400;
-  transform:translateY(80px);opacity:0;
-  transition:all .38s cubic-bezier(.34,1.56,.64,1);
-  min-width:260px;
-  border-left:2px solid var(--rose);
-}
-#toast.show{transform:translateY(0);opacity:1}
-#toast .tcls{
-  margin-left:auto;background:none;border:none;
-  color:var(--blush);cursor:pointer;font-size:16px;
-  opacity:.6;transition:opacity .2s;
-}
-#toast .tcls:hover{opacity:1}
-
-/* ════════════════════ PRODUCT MODAL ════════════════════ */
-#product-modal{
-  position:fixed;inset:0;z-index:4000;
-  display:flex;align-items:center;justify-content:center;
-  padding:16px;
-  opacity:0;pointer-events:none;
-  transition:opacity .3s ease;
-}
-#product-modal.open{opacity:1;pointer-events:all}
-#product-modal .pm-backdrop{
-  position:absolute;inset:0;
-  background:rgba(30,8,18,.72);
-  backdrop-filter:blur(6px);
-}
-#product-modal .pm-box{
-  position:relative;z-index:1;
-  background:var(--white);
-  border-radius:var(--r-xl);
-  width:100%;max-width:820px;
-  max-height:90vh;
-  display:grid;grid-template-columns:1fr 1fr;
-  overflow:hidden;
-  box-shadow:var(--sh-lg);
-  transform:scale(.94) translateY(20px);
-  transition:transform .35s cubic-bezier(.34,1.4,.64,1);
-}
-#product-modal.open .pm-box{transform:scale(1) translateY(0)}
-.pm-img-wrap{
-  background:var(--ivory2);
-  display:flex;align-items:center;justify-content:center;
-  min-height:360px;padding:32px;
-}
-.pm-img-wrap img{
-  width:100%;max-height:420px;
-  object-fit:contain;
-  border-radius:var(--r);
-}
-.pm-img-wrap .pm-emoji{font-size:96px;line-height:1}
-.pm-info{
-  padding:36px 32px;
-  display:flex;flex-direction:column;
-  overflow-y:auto;
-}
-.pm-close{
-  position:absolute;top:18px;right:22px;
-  background:var(--ivory2);border:none;
-  width:38px;height:38px;border-radius:50%;
-  font-size:18px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  color:var(--muted);transition:all .2s;z-index:2;
-}
-.pm-close:hover{background:var(--rose);color:white}
-.pm-cat-badge{
-  display:inline-block;
-  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
-  color:var(--rose);background:rgba(200,96,122,.1);
-  border:1px solid rgba(200,96,122,.25);
-  border-radius:50px;padding:4px 14px;
-  margin-bottom:16px;width:fit-content;
-}
-.pm-name{
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(22px,4vw,34px);font-weight:600;
-  color:var(--plum);line-height:1.25;margin-bottom:14px;
-}
-.pm-desc{
-  font-size:14px;color:var(--muted);line-height:1.7;
-  margin-bottom:24px;flex:1;
-}
-.pm-price-row{
-  display:flex;align-items:baseline;gap:8px;margin-bottom:24px;
-}
-.pm-price{
-  font-family:'Cormorant Garamond',serif;
-  font-size:36px;font-weight:600;color:var(--plum);
-}
-.pm-price small{font-family:'Inter',sans-serif;font-size:14px;color:var(--muted);font-weight:400}
-.pm-add-btn{
-  width:100%;padding:16px;
-  background:linear-gradient(135deg,var(--rose),var(--berry));
-  color:white;border:none;border-radius:50px;
-  font-size:12px;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  transition:transform .2s,box-shadow .2s;
-  box-shadow:0 6px 24px rgba(200,96,122,.4);
-}
-.pm-add-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(200,96,122,.5)}
-
-/* ════════════════════ MOBILE NAV ════════════════════ */
-.mob-nav{
-  display:none;position:fixed;bottom:0;left:0;right:0;
-  background:rgba(251,246,242,.97);backdrop-filter:blur(20px);
-  border-top:1px solid var(--border);
-  padding:8px 0 calc(8px + env(safe-area-inset-bottom));
-  z-index:700;box-shadow:0 -4px 20px rgba(30,8,18,.08);
-}
-.mob-nav-i{display:flex;justify-content:space-around;max-width:480px;margin:0 auto}
-.mnb{
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  background:none;border:none;color:var(--muted);
-  font-size:10px;cursor:pointer;padding:6px 14px;
-  border-radius:10px;transition:color .2s;
-  letter-spacing:.5px;
-}
-.mnb .ico{font-size:22px}
-.mnb.on,.mnb:hover{color:var(--rose)}
-
-/* ════════════════════ RESPONSIVE ════════════════════ */
-@media(max-width:960px){
-  .about-grid,.featured-grid,.info-grid{grid-template-columns:1fr}
-  .about-img-stack{height:420px}
-  .about-float{right:0}
-  .featured-badge{left:0}
-  .foot-grid{grid-template-columns:1fr;gap:36px}
-}
-@media(max-width:680px){
-  nav .nav-links,.nav-cta{display:none}
-  .mob-nav{display:block}
-  section{padding:64px 4%}
-  body{padding-bottom:80px}
-  .stat{padding:0 24px}
-  #cart-fab{bottom:90px;right:20px}
-  #toast{right:20px;bottom:160px;min-width:0;width:calc(100vw - 40px);font-size:13px}
-
-  /* Hero */
-  .hero{padding:80px 6% 60px}
-  .hero-title{font-size:clamp(36px,10vw,60px)}
-  .hero-sub{font-size:14px}
-  .hero-btns{flex-direction:column;align-items:center;gap:10px}
-  .hero-btns a{width:100%;max-width:300px;text-align:center}
-  .hero-chips{flex-wrap:wrap;justify-content:center;gap:8px}
-
-  /* Product grid — 2 columns on phone */
-  .products-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px}
-  .pcard-name{font-size:13px}
-  .pcard-desc{display:none}
-  .pprice{font-size:14px}
-  .padd-btn{width:30px;height:30px;font-size:16px}
-  .pcard-body{padding:10px 10px 12px}
-
-  /* Category tabs scroll */
-  .cat-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;flex-wrap:nowrap}
-  .cat-tab{white-space:nowrap;padding:9px 16px}
-
-  /* Cart drawer full width */
-  .cart-drawer{width:100%;right:-100%}
-  .cart-drawer.open{right:0}
-
-  /* Product modal — single column */
-  .pm-box{grid-template-columns:1fr;max-height:92vh}
-  .pm-img-wrap{min-height:220px;padding:20px;max-height:260px}
-  .pm-info{padding:20px 20px 24px}
-  .pm-name{font-size:24px}
-  .pm-price{font-size:28px}
-
-  /* Stats, about */
-  .stats-grid{grid-template-columns:repeat(2,1fr);gap:0}
-  .stat{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:28px 16px}
-  .stat:nth-child(even){border-right:none}
-  .stat:last-child,.stat:nth-last-child(2):nth-child(odd){border-bottom:none}
-  .about-img-stack{display:none}
-  .about-float{display:none}
-
-  /* Footer */
-  .foot-grid{grid-template-columns:1fr;gap:32px}
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CapsLock Computers | Laptops & PC Store Kuwait</title>
+  <link rel="stylesheet" href="styles.css?v=20260611" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-<!-- SPLASH -->
-<div id="splash">
-  <img src="logo.png" alt="VELOUR Beauty" style="height:100px;object-fit:contain;margin-bottom:16px" onerror="this.style.display='none'" />
-  <div class="sp-logo">VELOUR <em>Beauty</em></div>
-  <div class="sp-tag">Luxury Makeup · Kuwait</div>
-  <div class="sp-ar">فيلور بيوتي</div>
-  <div class="sp-line"></div>
-  <div class="sp-bar"><div class="sp-fill"></div></div>
-</div>
-
-<!-- NAV -->
-<nav id="main-nav">
-  <div class="nav-i">
-    <a href="#" class="nav-logo">
-      <img src="logo.png" alt="VELOUR Beauty" style="height:38px;object-fit:contain" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-      <div class="nav-logo-mark" style="display:none">💄</div>
-      <div class="nav-brand">VELOUR</div>
-    </a>
-    <ul class="nav-links">
-      <li><a href="#shop">Shop</a></li>
-      <li><a href="#about">About</a></li>
-      <li><a href="#hours">Visit</a></li>
-      <li><a href="#contact">Contact</a></li>
-    </ul>
-    <a href="#shop" class="nav-cta">Shop Now</a>
-  </div>
-</nav>
-
-<!-- MOBILE NAV -->
-<div class="mob-nav">
-  <div class="mob-nav-i">
-    <button class="mnb on" onclick="scrollTo(0,0)"><span class="ico">🏠</span>Home</button>
-    <button class="mnb" onclick="go('shop')"><span class="ico">💄</span>Shop</button>
-    <button class="mnb" onclick="go('about')"><span class="ico">✨</span>About</button>
-    <button class="mnb" onclick="go('hours')"><span class="ico">📍</span>Visit</button>
-  </div>
-</div>
-
-<!-- HERO -->
-<section class="hero">
-  <img src="logo.png" alt="VELOUR Beauty" style="height:70px;object-fit:contain;margin-bottom:20px;display:block;margin-left:auto;margin-right:auto;opacity:.92" onerror="this.style.display='none'" />
-  <div class="hero-eyebrow">New Collection 2025</div>
-  <h1 class="hero-title">
-    <em>Art</em> Meets<br><strong>Beauty</strong>
-  </h1>
-  <div class="hero-ar">حيث يلتقي الفن بالجمال</div>
-  <p class="hero-sub">Curated luxury makeup for the woman who commands every room. Discover shades that define, illuminate, and empower.</p>
-  <div class="hero-btns">
-    <a href="#shop" class="btn-primary">Explore Collection</a>
-    <a href="#about" class="btn-outline">Our Story</a>
-  </div>
-  <div class="hero-chips">
-    <span class="hchip">✦ Vegan & Cruelty-Free</span>
-    <span class="hchip">✦ Long-Wearing Formula</span>
-    <span class="hchip">✦ Gulf Climate Tested</span>
-  </div>
-</section>
-
-<!-- MARQUEE -->
-<div class="marquee-wrap">
-  <div class="marquee-track">
-    <span class="marquee-item">Lipstick <span class="marquee-dot">◆</span> Foundation <span class="marquee-dot">◆</span> Mascara <span class="marquee-dot">◆</span> Blush <span class="marquee-dot">◆</span> Highlighter <span class="marquee-dot">◆</span> Eyeshadow <span class="marquee-dot">◆</span> Concealer <span class="marquee-dot">◆</span> Bronzer <span class="marquee-dot">◆</span> Lip Gloss <span class="marquee-dot">◆</span> Setting Spray <span class="marquee-dot">◆</span></span>
-    <span class="marquee-item">Lipstick <span class="marquee-dot">◆</span> Foundation <span class="marquee-dot">◆</span> Mascara <span class="marquee-dot">◆</span> Blush <span class="marquee-dot">◆</span> Highlighter <span class="marquee-dot">◆</span> Eyeshadow <span class="marquee-dot">◆</span> Concealer <span class="marquee-dot">◆</span> Bronzer <span class="marquee-dot">◆</span> Lip Gloss <span class="marquee-dot">◆</span> Setting Spray <span class="marquee-dot">◆</span></span>
-  </div>
-</div>
-
-<!-- STATS -->
-<div class="stats-sec">
-  <div class="stats-inner">
-    <div class="stat"><div class="stat-num" id="stat-product-count">28</div><div class="stat-label">Products</div></div>
-    <div class="stat"><div class="stat-num">50K+</div><div class="stat-label">Happy Clients</div></div>
-    <div class="stat"><div class="stat-num">4.9</div><div class="stat-label">Rating</div></div>
-    <div class="stat"><div class="stat-num">5+</div><div class="stat-label">Years in Kuwait</div></div>
-  </div>
-</div>
-
-<!-- SHOP -->
-<section class="shop-sec" id="shop">
-  <div style="max-width:1100px;margin:0 auto">
-    <div class="shdr c">
-      <div class="slabel">The Collection</div>
-      <h2 class="stitle">Shop by <em>Category</em></h2>
-      <p class="ssub">From bold lips to luminous skin — every product crafted for perfection.</p>
-    </div>
-    <div class="cat-tabs" id="cat-tabs">
-      <button class="ctab on" data-slug="all" onclick="filter('all',this)">✦ All</button>
-    </div>
-    <div class="products-grid" id="menu-grid">
-      <div class="menu-loading"><div class="spin"></div><p>Loading collection…</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURED STRIP -->
-<section class="featured-strip">
-  <div class="featured-grid">
-    <div>
-      <img src="logo.png" alt="VELOUR Beauty" style="height:44px;object-fit:contain;margin-bottom:18px;display:block;filter:brightness(0) invert(1);opacity:.8" onerror="this.style.display='none'" />
-      <div class="slabel">Editor's Pick</div>
-      <h2 class="stitle">The Signature <em>Lip Collection</em></h2>
-      <p class="ssub" style="color:rgba(235,168,184,.65)">Twelve exclusive shades developed for the Gulf woman. Pigment-rich, long-lasting, and utterly luxurious.</p>
-      <div class="feat-bullets">
-        <div class="feat-bullet">18-hour wear formula</div>
-        <div class="feat-bullet">Hydrating with vitamin E</div>
-        <div class="feat-bullet">Heat & humidity resistant</div>
-        <div class="feat-bullet">Available in 12 shades</div>
-      </div>
-      <a href="#shop" class="btn-primary" style="display:inline-flex;margin-top:36px">Shop Lips →</a>
-    </div>
-    <div class="featured-img-wrap">
-      <img class="featured-img"
-        src="https://images.unsplash.com/photo-1586495777744-4e6232bf2263?w=800&q=85"
-        alt="Lip Collection" />
-      <div class="featured-badge">
-        <div class="big">12</div>
-        <div class="sm">Shades<br>Available</div>
+  <header id="header">
+    <div class="container header-inner">
+      <a href="#hero" class="logo-wrap">
+        <img src="logo.jpg" alt="CapsLock Computers" class="logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+        <div class="logo-text-fallback" style="display:none"><span class="logo-dhow" style="font-size:0.8em;letter-spacing:2px">CAPSLOCK<br>COMPUTERS</span></div>
+      </a>
+      <nav id="nav">
+        <a href="#about" data-i18n="nav_about" onclick="document.getElementById('nav').classList.remove('open')">About</a>
+        <a href="#products" data-i18n="nav_products" onclick="document.getElementById('nav').classList.remove('open')">Products</a>
+        <a href="#" onclick="document.getElementById('nav').classList.remove('open');openBuildDrawer();return false;"><i class="fa fa-tools" style="margin-right:5px"></i>Build PC</a>
+        <a href="#contact" data-i18n="nav_contact" onclick="document.getElementById('nav').classList.remove('open')">Contact</a>
+        <a href="#" id="navMyOrders" onclick="document.getElementById('nav').classList.remove('open');onAccountBtnClick();return false;" style="display:none"><i class="fa fa-receipt" style="margin-right:6px"></i>My Orders</a>
+        <a href="#" id="navSignIn" onclick="document.getElementById('nav').classList.remove('open');openAuthModal('login');return false;"><i class="fa fa-user" style="margin-right:6px"></i>Sign In</a>
+        <a href="#" class="nav-wishlist" onclick="document.getElementById('nav').classList.remove('open');openWishlist();return false;"><i class="fa fa-heart" style="margin-right:6px;color:#e0364f"></i>Wishlist <span id="navWishlistBadge" style="display:none;background:#e0364f;color:#fff;border-radius:50%;padding:0 5px;font-size:10px;font-weight:900"></span></a>
+        <a href="#" onclick="document.getElementById('nav').classList.remove('open');openOrderTracker();return false;"><i class="fa fa-search" style="margin-right:6px"></i>Track Order</a>
+        <a href="#" onclick="document.getElementById('nav').classList.remove('open');openOrderTracker();switchOrderTab('cancel');return false;"><i class="fa fa-times-circle" style="margin-right:6px"></i>Cancel Order</a>
+      </nav>
+      <div class="header-actions">
+        <button class="build-pc-btn" onclick="openBuildDrawer()"><i class="fa fa-tools"></i> Build PC</button>
+        <button class="hamburger" id="hamburger"><i class="fa fa-bars"></i></button>
+        <button class="lang-btn" id="langBtn" onclick="toggleLang()">عربي</button>
+        <button class="btn-account" id="accountBtn" onclick="onAccountBtnClick()">
+          <i class="fa fa-user"></i>
+          <span class="acct-txt" id="acctBtnLabel">Sign In</span>
+        </button>
       </div>
     </div>
-  </div>
-</section>
+  </header>
 
-<!-- ABOUT -->
-<section class="about-sec" id="about">
-  <div class="about-grid">
-    <div class="about-img-stack">
-      <img class="about-img-main"
-        src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&q=85"
-        alt="VELOUR Beauty" />
-      <img class="about-img-accent"
-        src="https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=600&q=85"
-        alt="Products" />
-      <div class="about-float">
-        <div class="big">5+</div>
-        <div class="sm">Years in<br>Kuwait</div>
+  <section id="hero" class="hero-compact">
+    <div class="container hero-compact-inner">
+      <div class="hero-compact-text">
+        <span class="hero-tag" data-i18n-html="hero_tag"><i class="fa fa-laptop"></i> Kuwait's #1 PC & Laptop Store</span>
+        <div class="hero-btns">
+          <a href="#products" class="btn btn-primary"><i class="fa fa-th-large"></i> <span data-i18n="hero_shop">Shop Now</span></a>
+          <a href="https://maps.app.goo.gl/LdoZ5Zt5Caih73tx5" target="_blank" class="btn btn-outline"><i class="fa fa-map-marker-alt"></i> Our Location</a>
+        </div>
       </div>
     </div>
-    <div>
-      <img src="logo.png" alt="VELOUR Beauty" style="height:50px;object-fit:contain;margin-bottom:20px;display:block" onerror="this.style.display='none'" />
-      <div class="slabel">Our Story</div>
-      <h2 class="stitle">Beauty is an <em>art form</em></h2>
-      <p class="ssub" style="margin-bottom:36px">VELOUR Beauty was born from a deep belief that makeup is more than cosmetics — it is confidence, identity, and self-expression. We curate only the finest formulas for the modern Gulf woman.</p>
-      <div class="values">
-        <div class="value">
-          <div class="value-ico">🌿</div>
-          <div>
-            <h4>Vegan & Cruelty-Free</h4>
-            <p>Every product in our collection is ethically sourced and never tested on animals.</p>
+    <!-- OFFERS — moving carousel inside hero -->
+    <div class="feat-ticker-outer">
+      <div class="feat-ticker-inner" id="featuredTrack"></div>
+    </div>
+  </section>
+
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span>🔥 RTX 5070 IN STOCK</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>GPU</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>CPU</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Motherboards</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Monitors</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Gaming Laptops</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Pre-Built PCs</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Peripherals</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>RAM &amp; SSDs</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>PSU &amp; Cases</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Repairs</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Build Your PC</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>🔥 RTX 5070 IN STOCK</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>GPU</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>CPU</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Motherboards</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Monitors</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Gaming Laptops</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Pre-Built PCs</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Peripherals</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>RAM &amp; SSDs</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>PSU &amp; Cases</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Repairs</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+      <span>Build Your PC</span><span class="sep">&nbsp;&#183;&nbsp;</span>
+    </div>
+  </div>
+
+  <section id="categories">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag" data-i18n="cat_tag">Browse by Type</span>
+        <h2 data-i18n-html="cat_h2">Shop by <span class="orange">Category</span></h2>
+      </div>
+      <div class="categories-grid" id="categoriesGrid">
+        <div class="cat-card" data-cat="gpu"          onclick="filterProducts('gpu')"          style="background-image:url('Products/SKU-0001.jpg')">
+          <div class="cat-icon"><i class="fa fa-fire"></i></div>
+          <h3>GPUs</h3>
+          <p>RTX 5000, RX 9000 Series</p>
+        </div>
+        <div class="cat-card" data-cat="cpu"          onclick="filterProducts('cpu')"          style="background-image:url('Products/SKU-0016.jpg')">
+          <div class="cat-icon"><i class="fa fa-microchip"></i></div>
+          <h3>CPUs</h3>
+          <p>Intel Core, AMD Ryzen</p>
+        </div>
+        <div class="cat-card" data-cat="motherboards" onclick="filterProducts('motherboards')" style="background-image:url('Products/SKU-0021.jpg')">
+          <div class="cat-icon"><i class="fa fa-server"></i></div>
+          <h3>Motherboards</h3>
+          <p>Z790, X670E, B650 Platforms</p>
+        </div>
+<div class="cat-card" data-cat="laptops"      onclick="filterProducts('laptops')"      style="background-image:url('Products/SKU-0041.jpg')">
+          <div class="cat-icon"><i class="fa fa-laptop"></i></div>
+          <h3>Laptops</h3>
+          <p>Gaming & Creator Laptops</p>
+        </div>
+        <div class="cat-card" data-cat="pre-builts"   onclick="filterProducts('pre-builts')"   style="background-image:url('Products/SKU-0051.jpg')">
+          <div class="cat-icon"><i class="fa fa-desktop"></i></div>
+          <h3>Pre-Builts</h3>
+          <p>Ready-to-Go Gaming PCs</p>
+        </div>
+        <div class="cat-card" data-cat="peripherals"  onclick="filterProducts('peripherals')"  style="background-image:url('Products/SKU-0061.jpg')">
+          <div class="cat-icon"><i class="fa fa-mouse"></i></div>
+          <h3>Peripherals</h3>
+          <p>Mouse, Keyboard, Headsets</p>
+        </div>
+        <div class="cat-card" data-cat="other-parts"  onclick="filterProducts('other-parts')"  style="background-image:url('Products/SKU-0076.jpg')">
+          <div class="cat-icon"><i class="fa fa-tools"></i></div>
+          <h3>Other PC Parts</h3>
+          <p>RAM, SSD, PSU, Cases, Cooling</p>
+        </div>
+        <div class="cat-card" data-cat="all"          onclick="filterProducts('all')"          style="background-image:url('Products/SKU-0008.jpg')">
+          <div class="cat-icon"><i class="fa fa-th-large"></i></div>
+          <h3>All Products</h3>
+          <p>Browse our full catalog</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STICKY CATEGORY NAV STRIP -->
+  <nav id="cat-nav">
+    <div class="cat-nav-row">
+      <div class="cn-item active" data-cat="all" onclick="jumpCat('all')">
+        <div class="cn-icon"><i class="fa fa-th-large"></i></div><span>All</span>
+      </div>
+      <div class="cn-item" data-cat="gpu" onclick="jumpCat('gpu')">
+        <div class="cn-icon"><i class="fa fa-fire"></i></div><span>GPU</span>
+      </div>
+      <div class="cn-item" data-cat="cpu" onclick="jumpCat('cpu')">
+        <div class="cn-icon"><i class="fa fa-microchip"></i></div><span>CPU</span>
+      </div>
+      <div class="cn-item" data-cat="motherboards" onclick="jumpCat('motherboards')">
+        <div class="cn-icon"><i class="fa fa-server"></i></div><span>Motherboards</span>
+      </div>
+      <div class="cn-item" data-cat="monitors" onclick="jumpCat('monitors')">
+        <div class="cn-icon"><i class="fa fa-tv"></i></div><span>Monitors</span>
+      </div>
+      <div class="cn-item" data-cat="laptops" onclick="jumpCat('laptops')">
+        <div class="cn-icon"><i class="fa fa-laptop"></i></div><span>Laptops</span>
+      </div>
+      <div class="cn-item" data-cat="pre-builts" onclick="jumpCat('pre-builts')">
+        <div class="cn-icon"><i class="fa fa-desktop"></i></div><span>Pre-Builts</span>
+      </div>
+      <div class="cn-item" data-cat="peripherals" onclick="jumpCat('peripherals')">
+        <div class="cn-icon"><i class="fa fa-mouse"></i></div><span>Peripherals</span>
+      </div>
+      <div class="cn-item" data-cat="other-parts" onclick="jumpCat('other-parts')">
+        <div class="cn-icon"><i class="fa fa-tools"></i></div><span>Other Parts</span>
+      </div>
+    </div>
+  </nav>
+
+
+<!-- ══════════════════════════════════════════════════════════
+       BUILD YOUR PC — slide-in drawer
+  ══════════════════════════════════════════════════════════ -->
+  <div class="build-drawer-overlay" id="buildDrawerOverlay" onclick="closeBuildDrawer()"></div>
+  <div class="build-drawer" id="buildDrawer">
+    <div class="build-drawer-header">
+      <div class="build-drawer-title"><i class="fa fa-tools"></i> Build Your PC</div>
+      <p class="build-drawer-sub">Pick a part for each slot — live pricing as you go</p>
+      <button class="build-drawer-close" onclick="closeBuildDrawer()"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="build-drawer-body">
+      <div class="build-layout">
+        <div class="build-slots-grid" id="buildSlotsGrid"></div>
+        <div class="build-summary">
+          <div class="build-summary-inner">
+            <div class="build-summary-title"><i class="fa fa-list-ul"></i> Build Summary</div>
+            <div class="build-summary-list" id="buildSummaryList"></div>
+            <div class="build-total-row">
+              <span>Grand Total</span>
+              <strong id="buildGrandTotal">0.000 KWD</strong>
+            </div>
+            <div class="build-part-count" id="buildPartCount">0 / 8 parts selected</div>
+            <button class="btn btn-primary" onclick="addBuildToCart()" style="width:100%;justify-content:center;margin-top:14px">
+              <i class="fa fa-cart-plus"></i> Add All to Cart
+            </button>
           </div>
         </div>
-        <div class="value">
-          <div class="value-ico">☀️</div>
-          <div>
-            <h4>Gulf Climate Tested</h4>
-            <p>Formulated specifically to withstand the heat and humidity of Kuwait and the GCC.</p>
+      </div>
+    </div>
+  </div>
+
+  <section id="products">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag" data-i18n="prod_tag">Full Catalog</span>
+        <h2 data-i18n-html="prod_h2">Our <span class="orange">Products</span></h2>
+      </div>
+      <div class="products-controls">
+        <form class="search-wrap" onsubmit="return false" autocomplete="off" role="search">
+          <i class="fa fa-search"></i>
+          <input type="search" id="searchInput" placeholder="Search GPU, CPU, motherboard, laptop..." data-i18n-placeholder="prod_search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        </form>
+        <div class="filter-pills">
+          <button class="pill active" data-filter="all">All</button>
+          <button class="pill" data-filter="gpu">GPU</button>
+          <button class="pill" data-filter="cpu">CPU</button>
+          <button class="pill" data-filter="motherboards">Motherboards</button>
+          <button class="pill" data-filter="monitors">Monitors</button>
+          <button class="pill" data-filter="laptops">Laptops</button>
+          <button class="pill" data-filter="pre-builts">Pre-Builts</button>
+          <button class="pill" data-filter="peripherals">Peripherals</button>
+          <button class="pill" data-filter="other-parts">Other Parts</button>
+        </div>
+      </div>
+      <div class="products-grid" id="productsGrid"></div>
+      <div class="products-empty" id="productsEmpty" style="display:none">
+        <i class="fa fa-box-open"></i>
+        <p data-i18n="no_results">No products found. Try a different search.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal-overlay" id="cartModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>
+          <img src="logo.jpg" alt="CapsLock Computers" class="modal-logo" onerror="this.style.display='none'" />
+          <i class="fa fa-shopping-cart"></i> <span data-i18n="cart_title">Your Cart</span>
+        </h3>
+        <button id="closeCart"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="modal-body" id="cartItems">
+        <p class="empty-cart" data-i18n="cart_empty">Your cart is empty.</p>
+      </div>
+      <div class="modal-footer">
+        <div class="cart-total"><span data-i18n="cart_total_label">Total:</span> <strong id="cartTotal">0.000 KWD</strong></div>
+        <button class="btn btn-primary" id="checkoutBtn" style="width:100%;justify-content:center;margin-top:0">
+          <i class="fab fa-whatsapp"></i> <span data-i18n="cart_wa">Request Quote on WhatsApp</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECENTLY VIEWED -->
+  <section id="recentlyViewedSection" style="display:none;background:#fff;padding:36px 0 20px">
+    <div class="container">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <h3 style="font-size:17px;font-weight:800;color:var(--dark)"><i class="fa fa-history" style="color:var(--orange);margin-right:8px"></i>Recently Viewed</h3>
+      </div>
+      <div class="rv-grid" id="recentlyViewedGrid"></div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="container features-grid">
+      <div class="feature-card">
+        <i class="fa fa-shipping-fast"></i>
+        <h3 data-i18n="feat_delivery_h">Fast Delivery</h3>
+        <p data-i18n="feat_delivery_p">Same-day delivery in Kuwait City. Fast shipping across Kuwait.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fa fa-certificate"></i>
+        <h3 data-i18n="feat_genuine_h">100% Genuine</h3>
+        <p data-i18n="feat_genuine_p">All products are sourced directly from authorised distributors and manufacturers.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fa fa-headset"></i>
+        <h3 data-i18n="feat_advice_h">Expert Advice</h3>
+        <p data-i18n="feat_advice_p">Our tech experts help you choose the right laptop or PC for your needs.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fa fa-tools"></i>
+        <h3 data-i18n="feat_repair_h">Repair Services</h3>
+        <p data-i18n="feat_repair_p">Professional laptop and PC repair by certified technicians. Fast turnaround.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="container contact-grid">
+      <div class="contact-info">
+        <div class="contact-logo-row">
+          <img src="logo.jpg" alt="CapsLock Computers" class="contact-logo-img" onerror="this.style.display='none'" />
+          <span class="contact-brand-txt" style="font-size:0.85em">CAPSLOCK COMPUTERS — LAPTOP REPAIRING CENTER</span>
+        </div>
+        <span class="section-tag" data-i18n="contact_tag">Get In Touch</span>
+        <h2 data-i18n-html="contact_h2">We're Here to <span class="orange">Help</span></h2>
+        <p data-i18n="contact_p">Need a specific laptop or PC part? Looking for repair service? Our team is ready to assist you in Arabic and English.</p>
+        <div class="contact-items">
+          <div class="contact-item">
+            <i class="fa fa-map-marker-alt"></i>
+            <div><strong data-i18n="contact_loc_label">Location</strong><a href="https://maps.app.goo.gl/LdoZ5Zt5Caih73tx5" target="_blank" style="color:inherit;text-decoration:underline">View on Google Maps</a></div>
+          </div>
+          <div class="contact-item">
+            <i class="fa fa-envelope"></i>
+            <div><strong data-i18n="contact_email_label">Email</strong><span>capslockcomputers@gmail.com</span></div>
+          </div>
+          <div class="contact-item">
+            <i class="fa fa-phone"></i>
+            <div><strong data-i18n="contact_phone_label">Phone / WhatsApp</strong><a href="tel:+96597656372" style="color:inherit;text-decoration:none">+965 9765 6372</a></div>
+          </div>
+          <div class="contact-item">
+            <i class="fa fa-clock"></i>
+            <div><strong data-i18n="contact_hours_label">Working Hours</strong><span data-i18n="contact_hours">Sat-Thu: 9 AM - 9 PM</span></div>
           </div>
         </div>
-        <div class="value">
-          <div class="value-ico">💎</div>
-          <div>
-            <h4>Luxury at Every Price</h4>
-            <p>We believe luxury beauty shouldn't be a privilege. Premium quality for everyone.</p>
+        <div class="social-links">
+          <a href="https://wa.me/96597656372" target="_blank"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <form class="contact-form" id="contactForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="form_name">Full Name</label>
+            <input type="text" data-i18n-placeholder="form_name_ph" placeholder="Ahmed Al-Mutairi" required />
+          </div>
+          <div class="form-group">
+            <label data-i18n="form_phone">Phone / WhatsApp</label>
+            <input type="tel" placeholder="+965 XXXX XXXX" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="form_email">Email</label>
+          <input type="email" placeholder="ahmed@example.com" required />
+        </div>
+        <div class="form-group">
+          <label data-i18n="form_need">What do you need?</label>
+          <select>
+            <option data-i18n="form_opt1">General Enquiry</option>
+            <option data-i18n="form_opt2">Bulk / Trade Order</option>
+            <option data-i18n="form_opt3">Product Availability</option>
+            <option data-i18n="form_opt4">Repair Service</option>
+            <option data-i18n="form_opt5">Delivery Information</option>
+            <option data-i18n="form_opt6">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label data-i18n="form_msg">Message</label>
+          <textarea rows="4" data-i18n-placeholder="form_msg_ph" placeholder="Tell us what laptop, PC parts or repair service you need..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary full-width"><span data-i18n="form_send">Send Message</span> <i class="fa fa-paper-plane"></i></button>
+        <div class="form-success" id="formSuccess" data-i18n="form_success">Message sent! We will get back to you shortly.</div>
+      </form>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="container about-grid">
+      <div class="about-img-wrap">
+        <div class="about-img-card">
+          <img src="logo.jpg" alt="CapsLock Computers" onerror="this.style.display='none'" />
+        </div>
+        <div class="about-badge"><i class="fa fa-laptop"></i> <span data-i18n="about_badge">Kuwait</span></div>
+      </div>
+      <div class="about-text">
+        <span class="section-tag" data-i18n="about_tag">Who We Are</span>
+        <h2 data-i18n-html="about_h2">Your Trusted <span class="orange">Tech</span> Partner</h2>
+        <p data-i18n="about_p1">CapsLock Computers is Kuwait's trusted destination for laptops, desktops, PC components, peripherals and accessories. Whether you are a gamer, professional, student or business — we have everything you need.</p>
+        <p data-i18n="about_p2">We stock only genuine, quality-tested products from trusted brands, with competitive prices and expert advice available in Arabic and English. We also offer professional laptop and PC repair services.</p>
+        <ul class="about-features">
+          <li><i class="fa fa-check-circle"></i> <span data-i18n="about_f1">100% genuine, quality-tested products</span></li>
+          <li><i class="fa fa-check-circle"></i> <span data-i18n="about_f2">Expert advice in Arabic and English</span></li>
+          <li><i class="fa fa-check-circle"></i> <span data-i18n="about_f3">Same-day delivery within Kuwait</span></li>
+          <li><i class="fa fa-check-circle"></i> <span data-i18n="about_f4">Bulk pricing for businesses and schools</span></li>
+          <li><i class="fa fa-check-circle"></i> <span data-i18n="about_f5">Professional laptop & PC repair services</span></li>
+        </ul>
+        <a href="#contact" class="btn btn-primary"><i class="fa fa-phone"></i> <span data-i18n="about_cta">Contact Us</span></a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-wrap">
+          <img src="logo.jpg" alt="CapsLock Computers" class="footer-logo" onerror="this.style.display='none'" />
+          <div class="footer-brand-name-text">CapsLock Computers<span>Laptop Repairing Center</span></div>
+        </div>
+        <p data-i18n="footer_desc">Kuwait's trusted supplier of laptops, PCs, components and tech accessories since 2024.</p>
+        <div class="social-links">
+          <a href="https://wa.me/96597656372" target="_blank"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4 data-i18n="footer_nav">Navigation</h4>
+        <a href="#about" data-i18n="nav_about">About Us</a>
+        <a href="#products" data-i18n="nav_products">Products</a>
+        <a href="#contact" data-i18n="nav_contact">Contact</a>
+      </div>
+      <div class="footer-links">
+        <h4 data-i18n="footer_cats">Categories</h4>
+        <a href="#categories" data-i18n="cat_power">Laptops</a>
+        <a href="#categories" data-i18n="cat_hand">Desktops</a>
+        <a href="#categories" data-i18n="cat_fasteners">Monitors</a>
+        <a href="#categories" data-i18n="cat_safety">Components</a>
+        <a href="#categories" data-i18n="cat_measuring">Peripherals</a>
+        <a href="#categories" data-i18n="cat_cutting">Accessories</a>
+      </div>
+      <div class="footer-links">
+        <h4 data-i18n="footer_support">Support</h4>
+        <a href="#contact" data-i18n="footer_trade">Business Accounts</a>
+        <a href="#contact" data-i18n="footer_bulk">Bulk Orders</a>
+        <a href="#contact" data-i18n="footer_delivery_info">Delivery Info</a>
+        <a href="#contact" data-i18n="footer_returns">Returns Policy</a>
+        <a href="#contact" data-i18n="footer_tech">Repair Services</a>
+      </div>
+    </div>
+    <div class="footer-location">
+      <a href="https://maps.app.goo.gl/LdoZ5Zt5Caih73tx5" target="_blank" class="footer-map-btn">
+        <i class="fa fa-map-marker-alt"></i> Find Us — View CapsLock Computers on Google Maps
+      </a>
+    </div>
+    <div class="footer-bottom">
+      <span data-i18n="footer_copy">2024 CapsLock Computers. All rights reserved. Kuwait.</span>
+    </div>
+  </footer>
+
+  <!-- INTRODUCTION -->
+  <section id="intro">
+    <div class="container intro-inner">
+      <div class="intro-logo-row">
+        <img src="logo.jpg" alt="CapsLock Computers" class="intro-logo-img" onerror="this.style.display='none'" />
+        <span class="intro-brand-txt" style="font-size:0.85em">CAPSLOCK COMPUTERS — LAPTOP REPAIRING CENTER</span>
+      </div>
+      <span class="section-tag intro-tag" data-i18n="intro_tag">Welcome to CapsLock Computers</span>
+      <h2 class="intro-heading" data-i18n-html="intro_h2">
+        Kuwait's Go-To <span class="orange">Laptop & PC</span> Store — Open 7 Days
+      </h2>
+      <p class="intro-body" data-i18n="intro_p">
+        CapsLock Computers supplies laptops, desktops, monitors, components, peripherals and accessories to individuals, businesses and schools across Kuwait. Whether you need one item or a full office setup — we have it in stock and ready to go.
+      </p>
+      <div class="intro-checks">
+        <span class="intro-check"><i class="fa fa-check-circle"></i> <span data-i18n="intro_c1">100+ Products In Stock</span></span>
+        <span class="intro-check"><i class="fa fa-check-circle"></i> <span data-i18n="intro_c2">Same-Day Kuwait Delivery</span></span>
+        <span class="intro-check"><i class="fa fa-check-circle"></i> <span data-i18n="intro_c3">Bulk &amp; Business Pricing</span></span>
+        <span class="intro-check"><i class="fa fa-check-circle"></i> <span data-i18n="intro_c4">Arabic &amp; English Support</span></span>
+      </div>
+      <a href="tel:+96597656372" class="intro-cta">
+        <i class="fa fa-phone"></i> <span data-i18n="intro_cta_text">Call Us: XXXX XXXX</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- CHECKOUT MODAL -->
+  <div class="checkout-overlay" id="checkoutOverlay">
+    <div class="checkout-box">
+      <div class="co-header">
+        <h3>
+          <img src="logo.jpg" alt="CapsLock Computers" class="modal-logo" onerror="this.style.display='none'" />
+          <i class="fab fa-whatsapp"></i> <span data-i18n="co_title">Complete Your Order</span>
+        </h3>
+        <button class="co-close" id="closeCheckout"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="co-body" id="coBody">
+        <div class="co-section">
+          <div class="co-section-title"><i class="fa fa-shopping-cart"></i> <span data-i18n="co_order_sum">Order Summary</span></div>
+          <div class="co-order-items" id="coItems"></div>
+          <div class="co-total"><span data-i18n="co_total_label">Total Amount</span><strong id="coTotal">0.000 KWD</strong></div>
+        </div>
+        <div class="co-section">
+          <div class="co-section-title"><i class="fa fa-user"></i> <span data-i18n="co_your_details">Your Details</span></div>
+          <div class="co-form-row">
+            <div class="co-field"><label data-i18n="co_full_name">Full Name *</label><input type="text" id="coName" placeholder="Ahmed Al-Mutairi" /></div>
+            <div class="co-field"><label data-i18n="co_wa_num">WhatsApp Number *</label><input type="tel" id="coPhone" placeholder="+965 XXXX XXXX" /></div>
+          </div>
+        </div>
+        <!-- FULFILMENT TOGGLE -->
+        <div class="co-section">
+          <div class="co-section-title"><i class="fa fa-truck"></i> Fulfilment Method</div>
+          <div class="co-fulfilment-toggle">
+            <button class="co-ft-btn active" id="ftDelivery" onclick="setFulfilment('delivery')">
+              <i class="fa fa-shipping-fast"></i> Delivery
+            </button>
+            <button class="co-ft-btn" id="ftPickup" onclick="setFulfilment('pickup')">
+              <i class="fa fa-store"></i> Pick Up
+            </button>
+          </div>
+          <div id="coPickupInfo" style="display:none" class="co-pickup-info">
+            <i class="fa fa-map-marker-alt"></i>
+            <span>Pick up from our store — <strong>CapsLock Computers, Kuwait</strong><br/>
+            We'll confirm the ready time on WhatsApp.</span>
+          </div>
+        </div>
+
+        <div class="co-section" id="coDeliverySection">
+          <div class="co-section-title"><i class="fa fa-map-marker-alt"></i> <span data-i18n="co_delivery_addr">Delivery Address</span></div>
+          <div class="co-field">
+            <label data-i18n="co_area">Area *</label>
+            <select id="coArea">
+              <option value="">-- Select Area --</option>
+              <option>Kuwait City</option><option>Salmiya</option><option>Hawalli</option>
+              <option>Farwaniya</option><option>Ahmadi</option><option>Jahra</option>
+              <option>Rumaithiya</option><option>Mishref</option><option>Bayan</option>
+              <option>Jabriya</option><option>Salwa</option><option>Mangaf</option>
+              <option>Fahaheel</option><option>Shuwaikh</option><option>Sabah Al Salem</option>
+              <option>Abu Halifa</option><option>Fintas</option><option>Mahboula</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="co-form-row">
+            <div class="co-field"><label data-i18n="co_block">Block</label><input type="text" id="coBlock" placeholder="Block 5" /></div>
+            <div class="co-field"><label data-i18n="co_street">Street</label><input type="text" id="coStreet" placeholder="Street 10" /></div>
+          </div>
+          <div class="co-form-row">
+            <div class="co-field"><label data-i18n="co_house">House / Building</label><input type="text" id="coHouse" placeholder="House 3" /></div>
+            <div class="co-field"><label data-i18n="co_floor">Floor / Apt</label><input type="text" id="coFloor" placeholder="Floor 2, Apt 4" /></div>
+          </div>
+          <div class="co-field"><label data-i18n="co_notes">Notes</label><input type="text" id="coNotes" placeholder="Leave at door, call on arrival..." /></div>
+        </div>
+        <button class="co-wa-btn" id="coSubmitBtn"><i class="fab fa-whatsapp" style="font-size:20px"></i> <span data-i18n="co_submit">Send Order on WhatsApp</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT DETAIL POPUP -->
+  <div class="prod-overlay" id="prodOverlay" onclick="if(event.target===this)closeProduct()">
+    <div class="prod-modal">
+      <div class="prod-modal-topbar">
+        <button class="prod-back-btn" onclick="closeProduct()">
+          <i class="fa fa-arrow-left"></i> <span data-i18n="back_btn">Back to Products</span>
+        </button>
+        <span class="prod-modal-sku" id="prodModalSku"></span>
+      </div>
+      <div class="prod-modal-body" id="prodModalBody">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN WELCOME PROMPT -->
+  <div id="loginPrompt" class="login-prompt" style="display:none">
+    <button class="lp-close" onclick="dismissLoginPrompt()" title="Dismiss"><i class="fa fa-times"></i></button>
+    <div class="lp-inner">
+      <div class="lp-icon"><i class="fa fa-user-circle"></i></div>
+      <div class="lp-text">
+        <strong>Track Your Orders</strong>
+        <span>Sign in to view order status, save your address and manage your account.</span>
+        <button class="lp-btn" onclick="dismissLoginPrompt();openAuthModal('login')">Sign In / Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH MODAL -->
+  <div class="auth-overlay" id="authOverlay" onclick="if(event.target===this)closeAuthModal()">
+    <div class="auth-modal">
+      <div class="auth-head">
+        <button class="auth-close-x" onclick="closeAuthModal()"><i class="fa fa-times"></i></button>
+        <div class="auth-logo-row">
+          <img src="logo.jpg" alt="CapsLock Computers" onerror="this.style.display='none'" />
+          <span style="font-size:0.85em">CAPSLOCK COMPUTERS<br>LAPTOP REPAIRING CENTER</span>
+        </div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="authTabLogin"  onclick="switchAuthTab('login')">Sign In</button>
+          <button class="auth-tab"        id="authTabSignup" onclick="switchAuthTab('signup')">Create Account</button>
+        </div>
+      </div>
+      <div class="auth-body">
+        <div class="auth-err" id="authErr"></div>
+        <div class="auth-ok"  id="authOk"></div>
+        <form id="authLoginForm" onsubmit="doAuthLogin();return false;" autocomplete="on">
+          <input type="text"     style="display:none" name="decoy-user" autocomplete="username" tabindex="-1" aria-hidden="true" />
+          <input type="password" style="display:none" name="decoy-pass" autocomplete="current-password" tabindex="-1" aria-hidden="true" />
+          <div class="auth-field">
+            <label>Email Address</label>
+            <input type="email" id="authLoginEmail" name="customer-email" placeholder="you@email.com" autocomplete="email" />
+          </div>
+          <div class="auth-field">
+            <label>Password</label>
+            <input type="password" id="authLoginPass" name="customer-password" placeholder="Your password" autocomplete="off" onkeydown="if(event.key==='Enter')doAuthLogin()" />
+          </div>
+          <button class="auth-forgot-link" onclick="switchAuthTab('forgot')">Forgot password?</button>
+          <button class="auth-submit" id="authLoginBtn" onclick="doAuthLogin()">
+            <i class="fa fa-sign-in-alt"></i> Sign In
+          </button>
+          <div class="auth-bottom-note">
+            Don't have an account? <button type="button" onclick="switchAuthTab('signup')">Create one — it's free</button>
+          </div>
+        </form>
+        <div id="authSignupForm" style="display:none">
+          <div class="auth-field">
+            <label>Full Name</label>
+            <input type="text" id="authSignupName" placeholder="Ahmed Al-Mutairi" autocomplete="name" />
+          </div>
+          <div class="auth-field">
+            <label>Email Address</label>
+            <input type="email" id="authSignupEmail" placeholder="you@email.com" autocomplete="email" />
+          </div>
+          <div class="auth-field">
+            <label>Password <small style="font-weight:400;text-transform:none;font-size:10px">(min 6 characters)</small></label>
+            <input type="password" id="authSignupPass" placeholder="Choose a password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doAuthSignup()" />
+          </div>
+          <button class="auth-submit" id="authSignupBtn" onclick="doAuthSignup()">
+            <i class="fa fa-user-plus"></i> Create Account
+          </button>
+          <div class="auth-bottom-note">
+            Already have an account? <button onclick="switchAuthTab('login')">Sign in</button>
+          </div>
+        </div>
+        <div id="authForgotForm" style="display:none">
+          <p style="font-size:13px;color:#666;margin-bottom:16px;line-height:1.6">
+            Enter your email and we'll send you a link to reset your password.
+          </p>
+          <div class="auth-field">
+            <label>Email Address</label>
+            <input type="email" id="authForgotEmail" placeholder="you@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doAuthForgot()" />
+          </div>
+          <button class="auth-submit" id="authForgotBtn" onclick="doAuthForgot()">
+            <i class="fa fa-envelope"></i> Send Reset Link
+          </button>
+          <div class="auth-bottom-note">
+            Remembered it? <button onclick="switchAuthTab('login')">Back to sign in</button>
           </div>
         </div>
       </div>
     </div>
   </div>
-</section>
 
-<!-- INFO -->
-<section class="info-sec" id="hours">
-  <div class="info-grid">
-    <div class="icard">
-      <div class="icard-title">🕐 Store Hours</div>
-      <div class="open-pill"><span class="odot"></span> Open Now</div>
-      <div class="hours-list">
-        <div class="hrow"><span class="hday">Monday – Thursday</span><span class="htime">10:00 AM – 10:00 PM</span></div>
-        <div class="hrow"><span class="hday">Friday</span><span class="htime">2:00 PM – 11:00 PM</span></div>
-        <div class="hrow"><span class="hday">Saturday</span><span class="htime">10:00 AM – 11:00 PM</span></div>
-        <div class="hrow"><span class="hday">Sunday</span><span class="htime">12:00 PM – 9:00 PM</span></div>
-      </div>
-    </div>
-    <div class="icard" id="contact">
-      <div class="icard-title">📍 Visit Us</div>
-      <div class="loc-list">
-        <div class="litem"><div class="lico">📍</div><div><h4>Address</h4><p>The Avenues Mall, Level 2<br>Kuwait City, Kuwait</p></div></div>
-        <div class="litem"><div class="lico">📞</div><div><h4>Phone</h4><a href="tel:+96500000000">+965 0000 0000</a></div></div>
-        <div class="litem"><div class="lico">📸</div><div><h4>Instagram</h4><a href="#">@velourbeauty.kw</a></div></div>
-        <div class="litem"><div class="lico">📧</div><div><h4>Email</h4><a href="mailto:hello@velourbeauty.kw">hello@velourbeauty.kw</a></div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer>
-  <div class="foot-grid">
-    <div>
-      <img src="logo.png" alt="VELOUR Beauty" style="height:54px;object-fit:contain;margin-bottom:12px;display:block" onerror="this.style.display='none'" />
-      <div class="foot-brand">VELOUR <em>Beauty</em></div>
-      <p class="foot-desc">Luxury makeup curated for the modern Gulf woman. Where art meets beauty.</p>
-    </div>
-    <div class="foot-col">
-      <h4>Shop</h4>
-      <ul>
-        <li><a href="#shop">Lips</a></li>
-        <li><a href="#shop">Eyes</a></li>
-        <li><a href="#shop">Face</a></li>
-        <li><a href="#shop">Skincare</a></li>
-      </ul>
-    </div>
-    <div class="foot-col">
-      <h4>Info</h4>
-      <ul>
-        <li><a href="#about">About Us</a></li>
-        <li><a href="#hours">Visit</a></li>
-        <li><a href="#contact">Contact</a></li>
-        <li><a href="admin.html">Admin ↗</a></li>
-      </ul>
-    </div>
-  </div>
-  <hr class="foot-divider" />
-  <div class="foot-bot">© 2025 VELOUR Beauty — فيلور بيوتي · Kuwait · All rights reserved</div>
-</footer>
-
-<!-- CART FAB -->
-<button id="cart-fab" onclick="toggleCart()">
-  🛍️
-  <span id="cart-count"></span>
-</button>
-
-<!-- CART BACKDROP -->
-<div id="cart-backdrop" onclick="toggleCart()"></div>
-
-<!-- CART DRAWER -->
-<div id="cart-drawer">
-  <div class="cd-hdr">
-    <img src="logo.png" alt="" style="height:28px;object-fit:contain;opacity:.85" onerror="this.style.display='none'" />
-    <div class="cd-title">Your Bag</div>
-    <button class="cd-cls" onclick="toggleCart()">✕</button>
-  </div>
-  <div class="cd-items" id="cd-items">
-    <div class="cd-empty">
-      <div class="cd-empty-ico">🛍️</div>
-      <p>Your bag is empty</p>
-      <p style="font-size:13px;color:var(--muted)">Add something gorgeous!</p>
-    </div>
-  </div>
-  <div class="cd-footer" id="cd-footer" style="display:none">
-    <div class="cd-subtotal">
-      <span class="cd-subtotal-label">Total</span>
-      <span class="cd-subtotal-val" id="cd-total">0.000 <small>KWD</small></span>
-    </div>
-    <button class="cd-checkout" onclick="checkout()">✦ Checkout</button>
-    <button class="cd-clear" onclick="clearCart()">Clear bag</button>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div id="toast">
-  <span id="toast-msg">Added to bag!</span>
-  <button class="tcls" onclick="document.getElementById('toast').classList.remove('show')">✕</button>
-</div>
-
-<script>
-/* ── CONFIG ──────────────────────────────────────────────── */
-const SUPABASE_URL = 'https://wjamqqwfpwqsafwcwajq.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqYW1xcXdmcHdxc2Fmd2N3YWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NjIzMDEsImV4cCI6MjA5NjIzODMwMX0.OvuBO-kbWKA3Wnamla2n7PxSqebZQc6b_y6IuKMStpI';
-
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-/* ── MAINTENANCE CHECK ───────────────────────────────────── */
-if(localStorage.getItem('site_enabled') === 'false'){
-  document.body.innerHTML = `
-    <style>
-      *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:'Georgia',serif;background:#1E0812;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;}
-      .m{max-width:480px}
-      .m-ico{font-size:72px;margin-bottom:24px;animation:float 2s ease-in-out infinite}
-      @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-      .m-title{font-size:3rem;font-weight:300;letter-spacing:8px;text-transform:uppercase;color:#F5E6D8;margin-bottom:8px}
-      .m-ar{font-size:1.2rem;color:#C9956E;margin-bottom:20px;direction:rtl}
-      .m-msg{color:rgba(235,168,184,.6);font-size:16px;line-height:1.8;margin-bottom:32px;font-weight:300}
-      .m-badge{display:inline-block;background:rgba(200,96,122,.15);border:1px solid rgba(200,96,122,.3);color:#EBA8B8;padding:9px 24px;border-radius:50px;font-size:12px;letter-spacing:2px;text-transform:uppercase}
-    </style>
-    <div class="m">
-      <div class="m-ico">💄</div>
-      <div class="m-title">VELOUR Beauty</div>
-      <div class="m-ar">فيلور بيوتي</div>
-      <p class="m-msg">We're refreshing our collection.<br>Back beautifully soon.</p>
-      <span class="m-badge">✦ Back Soon ✦</span>
-    </div>`;
-}
-
-/* ── SPLASH ──────────────────────────────────────────────── */
-setTimeout(() => document.getElementById('splash')?.classList.add('hide'), 3000);
-
-/* ── NAV SCROLL ──────────────────────────────────────────── */
-window.addEventListener('scroll', () => {
-  document.getElementById('main-nav').classList.toggle('scrolled', scrollY > 60);
-});
-
-/* ── HELPERS ─────────────────────────────────────────────── */
-function go(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'}) }
-
-/* ── MENU ────────────────────────────────────────────────── */
-let allItems = [], activeCat = 'all';
-
-async function loadMenu(){
-  // Apply any price overrides and hidden IDs saved from admin panel
-  let overrides = {}, hidden = [];
-  try{ overrides = JSON.parse(localStorage.getItem('velour_prices')||'{}'); }catch(e){}
-  try{ hidden = JSON.parse(localStorage.getItem('velour_hidden_ids')||'[]'); }catch(e){}
-  allItems = SAMPLE
-    .filter(i => !hidden.includes(i.id))
-    .map(i => overrides[i.name]!==undefined
-      ? {...i, price_kwd: parseFloat(overrides[i.name]).toFixed(3)}
-      : i
-    );
-  allItems = allItems.map(i => {
-    const stored = localStorage.getItem('velour_img_'+i.id);
-    return stored ? {...i, image_url: stored} : i;
-  });
-  buildTabs(CATS);
-  render('all');
-  const sc = document.getElementById('stat-product-count');
-  if(sc) sc.textContent = allItems.length;
-}
-
-function buildTabs(cats){
-  const c = document.getElementById('cat-tabs');
-  c.innerHTML = '<button class="ctab on" data-slug="all" onclick="filter(\'all\',this)">✦ All</button>';
-  cats.forEach(cat=>{
-    const b = document.createElement('button');
-    b.className = 'ctab';
-    b.dataset.slug = cat.slug;
-    b.innerHTML = `${cat.emoji||'✦'} ${cat.name}`;
-    b.onclick = ()=>filter(cat.slug,b);
-    c.appendChild(b);
-  });
-}
-
-function filter(slug,btn){
-  activeCat=slug;
-  document.querySelectorAll('.ctab').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  render(slug);
-}
-
-function render(cat){
-  const g = document.getElementById('menu-grid');
-  const items = cat==='all' ? allItems : allItems.filter(i=>i.cat===cat);
-  if(!items.length){
-    g.innerHTML='<div class="menu-loading"><p>Nothing here yet ✦</p></div>';
-    return;
-  }
-  g.innerHTML = items.map(item=>{
-    const badge = item.badge
-      ? `<span class="pbadge pb-${item.badge.toLowerCase().replace(/\s+/g,'-')}">${item.badge}</span>` : '';
-    const img = item.image_url
-      ? `<img src="${item.image_url}" alt="${item.name}" loading="lazy">`
-      : `<div class="pcard-emoji-ph">${item.emoji||'💄'}</div>`;
-    const catName = item.categories?.name || item.cat_name || '';
-    const idx = allItems.indexOf(item);
-    return `<div class="pcard" onclick="openProductIdx(${idx})" style="cursor:pointer">
-      <div class="pcard-img">
-        ${img}${badge}
-        <div class="pcard-overlay">
-          <button class="quick-add" onclick="event.stopPropagation();addCart(${JSON.stringify(item.name)},${item.price_kwd},${JSON.stringify(item.emoji||'💄')})">Add to Bag</button>
+  <!-- ACCOUNT MODAL -->
+  <div class="acct-overlay" id="acctOverlay" onclick="if(event.target===this)closeAcctModal()">
+    <div class="acct-modal">
+      <div class="acct-head">
+        <div class="acct-user-row">
+          <div class="acct-user-info">
+            <div class="acct-avatar" id="acctAvatar">?</div>
+            <div>
+              <div class="acct-uname" id="acctUname">My Account</div>
+              <div class="acct-uemail" id="acctUemail"></div>
+            </div>
+          </div>
+          <button class="acct-signout-btn" onclick="doSignOut()"><i class="fa fa-sign-out-alt"></i> Sign Out</button>
+        </div>
+        <div class="acct-tabs">
+          <button class="acct-tab active" id="acctTabProfile" onclick="switchAcctTab('profile')"><i class="fa fa-user"></i> Profile</button>
+          <button class="acct-tab"        id="acctTabOrders"  onclick="switchAcctTab('orders')"><i class="fa fa-receipt"></i> My Orders</button>
         </div>
       </div>
-      <div class="pcard-body">
-        <div class="pcard-cat">${catName}</div>
-        <div class="pcard-name">${item.name}</div>
-        <div class="pcard-desc">${item.description||''}</div>
-        <div class="pcard-foot">
-          <div class="pprice">${parseFloat(item.price_kwd).toFixed(3)} <small>KWD</small></div>
-          <button class="padd-btn" onclick="event.stopPropagation();addCart(${JSON.stringify(item.name)},${item.price_kwd},${JSON.stringify(item.emoji||'💄')})">+</button>
+      <div class="acct-body" id="acctProfilePane">
+        <div class="acct-ok" id="acctOk"></div>
+        <div class="acct-field">
+          <label>Full Name</label>
+          <input type="text" id="profName" placeholder="Ahmed Al-Mutairi" />
         </div>
+        <div class="acct-field">
+          <label>WhatsApp / Phone</label>
+          <input type="tel" id="profPhone" placeholder="+965 XXXX XXXX" />
+        </div>
+        <div class="acct-field">
+          <label>Default Delivery Address</label>
+          <textarea id="profAddress" rows="3" placeholder="Block 5, Street 10, House 3, Salmiya, Kuwait"></textarea>
+        </div>
+        <button class="acct-save-btn" onclick="doSaveProfile()"><i class="fa fa-save"></i> Save Profile</button>
       </div>
-    </div>`;
-  }).join('');
-}
-
-/* ── CART ────────────────────────────────────────────────── */
-let cart=[];
-function addCart(name,price,emoji){
-  const ex=cart.find(i=>i.name===name);
-  if(ex){ex.qty++}else{cart.push({name,price:parseFloat(price),emoji:emoji||'💄',qty:1})}
-  updateCartUI();
-  const fab=document.getElementById('cart-fab');
-  fab.classList.remove('bump');void fab.offsetWidth;fab.classList.add('bump');
-  document.getElementById('toast-msg').textContent=`"${name}" added to bag!`;
-  const t=document.getElementById('toast');
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2600);
-}
-function updateCartUI(){
-  const count=cart.reduce((s,i)=>s+i.qty,0);
-  const ce=document.getElementById('cart-count');
-  ce.textContent=count;
-  ce.classList.toggle('show',count>0);
-  const itemsEl=document.getElementById('cd-items');
-  const footer=document.getElementById('cd-footer');
-  if(!cart.length){
-    itemsEl.innerHTML=`<div class="cd-empty"><div class="cd-empty-ico">🛍️</div><p>Your bag is empty</p><p style="font-size:13px;color:var(--muted)">Add something gorgeous!</p></div>`;
-    footer.style.display='none';return;
-  }
-  footer.style.display='block';
-  itemsEl.innerHTML=cart.map((item,idx)=>`
-    <div class="cd-row">
-      <div class="cd-row-emoji">${item.emoji}</div>
-      <div class="cd-row-info">
-        <div class="cd-row-name">${item.name}</div>
-        <div class="cd-row-price">${(item.price*item.qty).toFixed(3)} KWD</div>
+      <div class="acct-body" id="acctOrdersPane" style="display:none">
+        <div id="myOrdersList"><div class="myo-loading"><i class="fa fa-spinner fa-spin"></i> Loading orders...</div></div>
       </div>
-      <div class="cd-qty">
-        <button class="cd-qty-btn" onclick="changeQty(${idx},-1)">−</button>
-        <span class="cd-qty-num">${item.qty}</span>
-        <button class="cd-qty-btn" onclick="changeQty(${idx},1)">+</button>
-      </div>
-    </div>`).join('');
-  const total=cart.reduce((s,i)=>s+(i.price*i.qty),0);
-  document.getElementById('cd-total').innerHTML=`${total.toFixed(3)} <small>KWD</small>`;
-}
-function changeQty(idx,delta){
-  cart[idx].qty+=delta;
-  if(cart[idx].qty<=0)cart.splice(idx,1);
-  updateCartUI();
-}
-function clearCart(){cart=[];updateCartUI()}
-function toggleCart(){
-  document.getElementById('cart-drawer').classList.toggle('open');
-  document.getElementById('cart-backdrop').classList.toggle('open');
-}
-function saveOrderToHistory(items, total){
-  const orders = JSON.parse(localStorage.getItem('velour_order_history')||'[]');
-  orders.push({
-    id: Date.now(),
-    date: new Date().toISOString(),
-    items: items.map(i=>({name:i.name, qty:i.qty, price:i.price})),
-    total
-  });
-  localStorage.setItem('velour_order_history', JSON.stringify(orders));
-}
-function checkout(){
-  if(!cart.length)return;
-  const total=cart.reduce((s,i)=>s+(i.price*i.qty),0);
-  const lines=cart.map(i=>`${i.qty}× ${i.name}`).join('\n');
-  alert(`Order placed! ✦\n\n${lines}\n\nTotal: ${total.toFixed(3)} KWD\n\nThank you for shopping VELOUR!`);
-  saveOrderToHistory(cart, total);
-  clearCart();toggleCart();
-}
-
-/* ── SAMPLE DATA ─────────────────────────────────────────── */
-const CATS=[
-  {slug:'lips',     name:'Lips',      emoji:'💋'},
-  {slug:'eyes',     name:'Eyes',      emoji:'👁️'},
-  {slug:'face',     name:'Face',      emoji:'✨'},
-  {slug:'skincare', name:'Skincare',  emoji:'🌿'},
-];
-const SAMPLE=[
-  // ── GLOW KISS — REAL PHOTOS (first 10) ──
-  {id:1, name:'Glow Kiss Burgundy',       description:'Deep burgundy Glow Kiss lipstick. Rich, long-lasting colour with a velvety soft finish.',     price_kwd:'8.500', emoji:'💋',badge:'New',        cat:'lips',     cat_name:'Lips',     image_url:'product-images/glow-kiss-burgundy-lipstick.jpg'},
-  {id:2, name:'Holographic Lip Gloss',    description:'Iridescent holographic gloss with rainbow shimmer. Non-sticky, ultra-glossy finish.',         price_kwd:'7.000', emoji:'✨',badge:'New',        cat:'lips',     cat_name:'Lips',     image_url:'product-images/holographic-lip-gloss.jpg'},
-  {id:3, name:'3-in-1 Lip Liner',         description:'Versatile lip liner that defines, fills and contours. Long-wearing formula in nude shades.',  price_kwd:'5.000', emoji:'💄',badge:'New',        cat:'lips',     cat_name:'Lips',     image_url:'product-images/3in1-lip-liner.jpg'},
-  {id:4, name:'Nude Lip Kit Set',         description:'Complete nude lip kit — liner, lipstick and gloss for the perfect everyday pout.',            price_kwd:'14.000',emoji:'💋',badge:'Bestseller', cat:'lips',     cat_name:'Lips',     image_url:'product-images/nude-lip-kit-set.jpg'},
-  {id:5, name:'Glow Kiss Pink Duo',       description:'Vibrant pink Glow Kiss lip gloss + matching lipstick duo. Bold colour, all-day wear.',        price_kwd:'11.000',emoji:'💋',badge:'Popular',    cat:'lips',     cat_name:'Lips',     image_url:'product-images/glow-kiss-pink-duo.jpg'},
-  {id:6, name:'Clear Glow Gloss',         description:'Crystal-clear high-shine gloss. Plumping effect with a mirror-finish glow.',                 price_kwd:'6.000', emoji:'✨',badge:null,         cat:'lips',     cat_name:'Lips',     image_url:'product-images/clear-glow-gloss.jpg'},
-  {id:7, name:'Silver Holo Gloss',        description:'Silver holographic gloss with multi-dimensional shimmer. Layer over any lip colour.',         price_kwd:'7.000', emoji:'✨',badge:'Limited',    cat:'lips',     cat_name:'Lips',     image_url:'product-images/silver-holo-gloss.jpg'},
-  {id:8, name:'Coral Glow Lipstick',      description:'Warm coral Glow Kiss lipstick duo. Buildable coverage with a luminous satin finish.',         price_kwd:'9.000', emoji:'💋',badge:null,         cat:'lips',     cat_name:'Lips',     image_url:'product-images/coral-glow-lipstick.jpg'},
-  {id:9, name:'Black Kohl Liner',         description:'Intensely black kohl pencil with a smudge tip. Perfect for smoky eyes and bold liner looks.',  price_kwd:'4.500',emoji:'👁️',badge:null,        cat:'eyes',     cat_name:'Eyes',     image_url:'product-images/black-kohl-liner.jpg'},
-  {id:10,name:'Volume Mascara GR',        description:'Glow Kiss volume mascara. Triple-action brush for extreme volume, length and lift.',           price_kwd:'8.500', emoji:'👁️',badge:'Bestseller',cat:'eyes',     cat_name:'Eyes',     image_url:'product-images/volume-mascara-gr.jpg'},
-
-  // ── MORE PRODUCTS ──
-  {id:11,name:'Rose Water Toner',         description:'Hydrating toner with pure damask rose water. Balances and refreshes skin.',            price_kwd:'8.500', emoji:'🌹',badge:'New',           cat:'skincare', cat_name:'Skincare', image_url:'product-images/rose-water-toner.jpg'},
-  {id:12,name:'Vitamin C Serum',          description:'Brightening 15% vitamin C serum. Fades dark spots and evens skin tone.',               price_kwd:'14.000',emoji:'🌿',badge:'Bestseller',  cat:'skincare', cat_name:'Skincare', image_url:'product-images/vitamin-c-serum.jpg'},
-  {id:13,name:'Night Repair Cream',       description:'Rich overnight cream with retinol and peptides. Wake up to visibly smoother skin.',    price_kwd:'16.000',emoji:'🌙',badge:null,           cat:'skincare', cat_name:'Skincare', image_url:'product-images/night-repair-cream.jpg'},
-  {id:14,name:'Hyaluronic Acid Serum',    description:'3-weight hyaluronic acid for deep, lasting hydration. Plumps and smooths instantly.',  price_kwd:'13.000',emoji:'💧',badge:'Bestseller',  cat:'skincare', cat_name:'Skincare', image_url:'product-images/hyaluronic-acid-serum.jpg'},
-  {id:15,name:'Glow Face Oil',            description:'Lightweight rosehip, jojoba and squalane oil blend. Glowing skin overnight.',          price_kwd:'15.000',emoji:'🌹',badge:null,           cat:'skincare', cat_name:'Skincare', image_url:'product-images/glow-face-oil.jpg'},
-  {id:16,name:'Brightening Sheet Mask',   description:'Korean-formula mask soaked in niacinamide + arbutin. Brighter skin in 20 minutes.',    price_kwd:'3.500', emoji:'🌿',badge:null,           cat:'skincare', cat_name:'Skincare', image_url:'product-images/brightening-sheet-mask.jpg'},
-  {id:17,name:'Micellar Cleansing Water', description:'No-rinse micellar water removes makeup, SPF and impurities in one sweep.',            price_kwd:'6.500', emoji:'💦',badge:'Essential',    cat:'skincare', cat_name:'Skincare', image_url:'product-images/micellar-cleansing-water.jpg'},
-  {id:19,name:'Velvet Matte Lipstick',  description:'Ultra-pigmented matte lipstick in 12 rich shades. Lightweight, transfer-proof and lasts all day.',  price_kwd:'8.000', emoji:'💄',badge:'Bestseller', cat:'lips',     cat_name:'Lips',     image_url:'product-images/velvet-matte-lipstick.jpg'},
-  {id:18,name:'SPF 50 Sunscreen',         description:'Lightweight, invisible sunscreen. Broad-spectrum protection with silky finish.',       price_kwd:'9.500', emoji:'☀️',badge:'Essential',    cat:'skincare', cat_name:'Skincare', image_url:'product-images/spf-sunscreen.jpg'},
-  {id:20,name:'Contour & Highlight Duo',  description:'Cream-to-powder contour stick paired with champagne highlight. Sculpt and glow in one.',price_kwd:'15.000',emoji:'\u2728',badge:'New',         cat:'face',     cat_name:'Face',     image_url:'product-images/contour-highlight-duo.jpg'},
-]
-
-loadMenu();
-
-/* ── PRODUCT MODAL ────────────────────────────────────────── */
-function openProductIdx(idx){
-  const item = allItems[idx];
-  if(!item) return;
-  const m = document.getElementById('product-modal');
-  const imgHtml = item.image_url
-    ? `<img src="${item.image_url}" alt="${item.name}" />`
-    : `<div class="pm-emoji">${item.emoji||'💄'}</div>`;
-  document.getElementById('pm-img').innerHTML = imgHtml;
-  document.getElementById('pm-cat').textContent = item.cat_name || item.cat || '';
-  document.getElementById('pm-name').textContent = item.name;
-  document.getElementById('pm-desc').textContent = item.description || '';
-  document.getElementById('pm-price').innerHTML = `${parseFloat(item.price_kwd).toFixed(3)} <small>KWD</small>`;
-  document.getElementById('pm-add').onclick = () => {
-    addCart(item.name, item.price_kwd, item.emoji||'💄');
-    closeProduct();
-  };
-  m.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeProduct(){
-  document.getElementById('product-modal').classList.remove('open');
-  document.body.style.overflow = '';
-}
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeProduct(); });
-</script>
-
-<!-- PRODUCT MODAL -->
-<div id="product-modal" role="dialog" aria-modal="true">
-  <div class="pm-backdrop" onclick="closeProduct()"></div>
-  <div class="pm-box">
-    <button class="pm-close" onclick="closeProduct()" aria-label="Close">✕</button>
-    <div class="pm-img-wrap" id="pm-img"></div>
-    <div class="pm-info">
-      <button onclick="closeProduct()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;letter-spacing:.5px;display:flex;align-items:center;gap:6px;padding:0;margin-bottom:18px;transition:color .2s" onmouseover="this.style.color='var(--rose)'" onmouseout="this.style.color='var(--muted)'">← Back to all products</button>
-      <div class="pm-cat-badge" id="pm-cat"></div>
-      <div class="pm-name" id="pm-name"></div>
-      <div class="pm-desc" id="pm-desc"></div>
-      <div class="pm-price-row">
-        <div class="pm-price" id="pm-price"></div>
-      </div>
-      <button class="pm-add-btn" id="pm-add">
-        <span>🛍️</span> Add to Bag
-      </button>
     </div>
   </div>
-</div>
 
+  <!-- FLOATING CART BUTTON -->
+  <button class="mob-cart-fab" id="mobCartFab" onclick="openCart()">
+    <i class="fa fa-shopping-cart"></i>
+    <span id="mobCartCount">0</span>
+  </button>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastMsg" class="toast-msg"></div>
+
+  <!-- WHATSAPP CHAT FAB -->
+  <button class="wa-chat-fab" onclick="openWAChat()" title="Chat with us on WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+    <span class="wa-chat-label">Chat</span>
+  </button>
+
+  <!-- WISHLIST MODAL -->
+  <div class="wl-overlay" id="wishlistOverlay" onclick="if(event.target===this)closeWishlist()">
+    <div class="wl-modal">
+      <div class="wl-head">
+        <h3><i class="fa fa-heart" style="color:var(--orange)"></i> My Wishlist <span id="wishlistBadge" class="wl-count-badge" style="display:none">0</span></h3>
+        <button onclick="closeWishlist()"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="wl-body" id="wishlistBody"></div>
+    </div>
+  </div>
+
+  <!-- REVIEWS MODAL -->
+  <div class="review-overlay" id="reviewOverlay" onclick="if(event.target===this)closeReviews()">
+    <div class="review-modal">
+      <div class="review-head">
+        <h3><i class="fa fa-star" style="color:#f5c518"></i> Reviews — <span id="reviewProductName"></span></h3>
+        <button onclick="closeReviews()"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="review-body">
+        <div class="rev-write-section">
+          <h4>Leave a Review</h4>
+          <div id="reviewStarInput" style="margin-bottom:10px"></div>
+          <input type="text" id="reviewNameInput" placeholder="Your name (optional)" class="rev-input" />
+          <textarea id="reviewCommentInput" placeholder="Share your experience..." class="rev-textarea" rows="3"></textarea>
+          <div class="rev-err" id="reviewErr"></div>
+          <button class="rev-submit-btn" id="reviewSubmitBtn" onclick="submitReview()"><i class="fa fa-paper-plane"></i> Submit Review</button>
+        </div>
+        <div class="rev-list-section">
+          <h4>Customer Reviews</h4>
+          <div id="reviewList"><p style="color:#aaa;font-size:13px;text-align:center;padding:16px">Loading...</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BULK QUOTE MODAL -->
+  <div class="bulk-overlay" id="bulkOverlay" onclick="if(event.target===this)closeBulkQuote()">
+    <div class="bulk-modal">
+      <div class="bulk-head">
+        <h3><i class="fa fa-clipboard-list" style="color:var(--orange)"></i> Bulk / Business Quote</h3>
+        <button onclick="closeBulkQuote()"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="bulk-body">
+        <p style="font-size:13px;color:#666;margin-bottom:16px">Select products and quantities — we'll send your quote request directly on WhatsApp.</p>
+        <div class="bulk-name-row">
+          <input type="text" id="bulkName" placeholder="Your Name (optional)" class="bulk-input" />
+          <input type="tel" id="bulkPhone" placeholder="Your Phone (optional)" class="bulk-input" />
+        </div>
+        <div id="bulkRows"></div>
+        <button class="bulk-add-row-btn" onclick="addBulkRow()"><i class="fa fa-plus"></i> Add Another Item</button>
+        <button class="bulk-send-btn" onclick="sendBulkQuote()"><i class="fab fa-whatsapp"></i> Send Quote on WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER TRACKING MODAL -->
+  <div class="track-overlay" id="trackOverlay" onclick="if(event.target===this)closeOrderTracker()">
+    <div class="track-modal">
+      <div class="track-head">
+        <h3><i class="fa fa-box"></i> My Orders</h3>
+        <button onclick="closeOrderTracker()"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="track-tabs">
+        <button class="track-tab active" id="tabTrack" onclick="switchOrderTab('track')"><i class="fa fa-search"></i> Track Order</button>
+        <button class="track-tab" id="tabCancel" onclick="switchOrderTab('cancel')"><i class="fa fa-times-circle"></i> Cancel Order</button>
+      </div>
+      <div class="track-body" id="panelTrack">
+        <p style="font-size:13px;color:#666;margin-bottom:16px">Enter the WhatsApp number you used during checkout to find your orders.</p>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="tel" id="trackPhone" placeholder="+965 XXXX XXXX" class="track-input" autocomplete="off" onkeydown="if(event.key==='Enter')trackOrder()" />
+          <button class="track-btn" onclick="trackOrder()"><i class="fa fa-search"></i> Find</button>
+        </div>
+        <div class="track-err" id="trackErr"></div>
+        <div id="trackResults"></div>
+      </div>
+      <div class="track-body" id="panelCancel" style="display:none">
+        <div class="cancel-info-box">
+          <i class="fa fa-clock"></i>
+          <span>You can only cancel orders placed <strong>within the last hour</strong>. After that, please contact us on WhatsApp.</span>
+        </div>
+        <p style="font-size:13px;color:#666;margin-bottom:16px;margin-top:12px">Enter the WhatsApp number you used at checkout.</p>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="tel" id="cancelPhone" placeholder="+965 XXXX XXXX" class="track-input" autocomplete="off" onkeydown="if(event.key==='Enter')findCancelOrders()" />
+          <button class="track-btn" onclick="findCancelOrders()"><i class="fa fa-search"></i> Find</button>
+        </div>
+        <div class="track-err" id="cancelErr"></div>
+        <div id="cancelResults"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js?v=20260611"></script>
 </body>
 </html>
+
+
+
