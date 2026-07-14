@@ -895,6 +895,10 @@
         <div class="search-bar"><i class="fa fa-search" style="color:#aaa"></i><input type="text" id="foSearch" placeholder="Search products or SKU..." oninput="foFilter()" autocomplete="off" /></div>
         <select class="filter-sel" id="foCatFilter" onchange="foFilter()"></select>
         <button class="ur-btn" id="foSelectAllBtn" onclick="foSelectAllVisible()"><i class="fa fa-check-square"></i> Select All</button>
+        <div class="ur-group">
+          <button class="ur-btn" id="foUndoBtn" onclick="foUndo()" disabled title="Undo"><i class="fa fa-undo"></i> Undo</button>
+          <button class="ur-btn" id="foRedoBtn" onclick="foRedo()" disabled title="Redo"><i class="fa fa-redo"></i> Redo</button>
+        </div>
         <span id="foCount" style="font-size:13px;color:var(--gray);font-weight:800;white-space:nowrap"></span>
         <button class="save-btn" onclick="saveFeaturedOffers()"><i class="fa fa-check"></i> Save Featured Products</button>
       </div>
@@ -1622,6 +1626,38 @@ var _foItems = []; // ordered array of { id, sale } (pending save)
 function _foFind(id) { return _foItems.find(function(x) { return x.id === id; }); }
 function _foOfferPrice(price, sale) { return sale > 0 ? price * (1 - sale / 100) : price; }
 
+// ── FEATURED TAB UNDO / REDO ─────────────────────────────────────────────────
+// Tracks _foItems changes (feature/unfeature, sale % edits) with its own
+// toolbar buttons — kept separate from the Inventory tab's stock undo/redo
+// (Ctrl+Z above) so the two don't clash over the same shortcut.
+let _foUndoStack = [];
+let _foRedoStack = [];
+function _foPushUndo() {
+  _foUndoStack.push(JSON.stringify(_foItems));
+  if (_foUndoStack.length > 50) _foUndoStack.shift();
+  _foRedoStack = [];
+  _foSyncUrBtns();
+}
+function _foSyncUrBtns() {
+  var u = document.getElementById('foUndoBtn'), r = document.getElementById('foRedoBtn');
+  if (u) u.disabled = _foUndoStack.length === 0;
+  if (r) r.disabled = _foRedoStack.length === 0;
+}
+function foUndo() {
+  if (!_foUndoStack.length) return;
+  _foRedoStack.push(JSON.stringify(_foItems));
+  _foItems = JSON.parse(_foUndoStack.pop());
+  _foUpdateCount(); _foRenderList(document.getElementById('foSearch').value); _foSyncUrBtns();
+  showToast('Undone ↩');
+}
+function foRedo() {
+  if (!_foRedoStack.length) return;
+  _foUndoStack.push(JSON.stringify(_foItems));
+  _foItems = JSON.parse(_foRedoStack.pop());
+  _foUpdateCount(); _foRenderList(document.getElementById('foSearch').value); _foSyncUrBtns();
+  showToast('Redone ↪');
+}
+
 async function renderFeaturedTab() {
   var res = await sbFetch(SB_URL + '/rest/v1/capslock_settings?key=eq.featured_offers&select=value', { headers: SB_HDRS });
   var raw = [];
@@ -1629,6 +1665,7 @@ async function renderFeaturedTab() {
     try { raw = JSON.parse(res.data[0].value) || []; } catch(e) {}
   }
   _foItems = raw.map(function(x) { return (typeof x === 'number') ? { id: x, sale: 0 } : { id: x.id, sale: x.sale || 0 }; });
+  _foUndoStack = []; _foRedoStack = []; _foSyncUrBtns();
   document.getElementById('foSearch').value = '';
   var catSel = document.getElementById('foCatFilter');
   catSel.innerHTML = '<option value="all">All Categories</option>' +
@@ -1707,7 +1744,9 @@ function foFilter() { _foRenderList(document.getElementById('foSearch').value); 
 function foToggleSelectAll() {
   var q = document.getElementById('foSearch').value;
   var list = _foFilteredList(q);
-  var allSelected = list.length > 0 && list.every(function(p) { return !!_foFind(p.id); });
+  if (!list.length) return;
+  _foPushUndo();
+  var allSelected = list.every(function(p) { return !!_foFind(p.id); });
   if (allSelected) {
     var ids = new Set(list.map(function(p) { return p.id; }));
     _foItems = _foItems.filter(function(x) { return !ids.has(x.id); });
@@ -1725,22 +1764,26 @@ function foApplyBulkSale() {
   var pct = Math.max(0, Math.min(95, parseInt(document.getElementById('foBulkSale').value, 10) || 0));
   var q = document.getElementById('foSearch').value;
   var visibleIds = new Set(_foFilteredList(q).map(function(p) { return p.id; }));
-  var count = 0;
-  _foItems.forEach(function(item) { if (visibleIds.has(item.id)) { item.sale = pct; count++; } });
-  if (!count) { showToast('No selected products match the current search/filter'); return; }
+  var toChange = _foItems.filter(function(item) { return visibleIds.has(item.id); });
+  if (!toChange.length) { showToast('No selected products match the current search/filter'); return; }
+  _foPushUndo();
+  toChange.forEach(function(item) { item.sale = pct; });
   _foRenderList(q);
-  showToast('Applied ' + pct + '% sale to ' + count + ' product' + (count === 1 ? '' : 's'));
+  showToast('Applied ' + pct + '% sale to ' + toChange.length + ' product' + (toChange.length === 1 ? '' : 's'));
 }
 function foClearBulkSale() {
   var q = document.getElementById('foSearch').value;
   var visibleIds = new Set(_foFilteredList(q).map(function(p) { return p.id; }));
-  var count = 0;
-  _foItems.forEach(function(item) { if (visibleIds.has(item.id) && item.sale > 0) { item.sale = 0; count++; } });
+  var toChange = _foItems.filter(function(item) { return visibleIds.has(item.id) && item.sale > 0; });
   document.getElementById('foBulkSale').value = '';
+  if (!toChange.length) { _foRenderList(q); showToast('Nothing to clear'); return; }
+  _foPushUndo();
+  toChange.forEach(function(item) { item.sale = 0; });
   _foRenderList(q);
-  showToast(count ? ('Cleared sale from ' + count + ' product' + (count === 1 ? '' : 's')) : 'Nothing to clear');
+  showToast('Cleared sale from ' + toChange.length + ' product' + (toChange.length === 1 ? '' : 's'));
 }
 function foToggle(id) {
+  _foPushUndo();
   var idx = _foItems.findIndex(function(x) { return x.id === id; });
   if (idx === -1) { _foItems.push({ id: id, sale: 0 }); } else { _foItems.splice(idx, 1); }
   _foUpdateCount();
@@ -1750,6 +1793,7 @@ function foToggle(id) {
 // a sale price only means anything if it's actually shown in the strip.
 function foSetSale(id, rawVal) {
   var pct = Math.max(0, Math.min(95, parseInt(rawVal, 10) || 0));
+  _foPushUndo();
   var item = _foFind(id);
   if (!item) { item = { id: id, sale: 0 }; _foItems.push(item); }
   item.sale = pct;
