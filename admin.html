@@ -470,6 +470,11 @@
     .newcat-slug{font-size:11px;color:var(--gray);margin-bottom:14px;}
     .newcat-slug span{font-weight:700;color:var(--orange);}
     .newcat-save{width:100%;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;}
+    /* SEO tab — mock Google search result preview */
+    .seo-preview{border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:#fff;font-family:arial,sans-serif;}
+    .seo-preview-title{color:#1a0dab;font-size:18px;line-height:1.3;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .seo-preview-url{color:#006621;font-size:13px;margin-bottom:4px;}
+    .seo-preview-desc{color:#545454;font-size:13px;line-height:1.4;}
     .newcat-save:hover{background:#000000;}
     .cat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
     .cat-chip{display:flex;align-items:center;gap:5px;background:rgba(255,98,0,.08);border:1px solid rgba(255,98,0,.2);color:var(--orange);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
@@ -585,6 +590,9 @@
     </button>
     <button class="tab-btn" id="tabCategories" onclick="switchTab('categories')">
       <i class="fa fa-th-large"></i> Categories
+    </button>
+    <button class="tab-btn" id="tabSeo" onclick="switchTab('seo')">
+      <i class="fa fa-search-plus"></i> SEO
     </button>
     <button class="tab-btn" id="tabOwner" onclick="switchTab('owner')" style="display:none;margin-left:auto;background:rgba(124,58,237,.12);color:#c4b5fd;border-bottom-color:transparent;">
       <i class="fa fa-crown"></i> Owner Controls
@@ -876,6 +884,60 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px" id="catEditGrid"></div>
   </div>
 
+  <!-- SEO SECTION -->
+  <div id="seoSection" class="main" style="display:none">
+    <div class="table-top" style="margin-bottom:12px">
+      <h2><i class="fa fa-search-plus" style="color:var(--orange);margin-right:8px"></i>SEO Settings</h2>
+    </div>
+    <p style="font-size:12px;color:var(--gray);margin:0 0 20px;max-width:640px">
+      Controls what Google shows for this site in search results (title, description, keywords).
+      Changes here go live on the storefront within a few seconds — no code changes or GitHub needed.
+    </p>
+    <div style="max-width:640px;display:flex;flex-direction:column;gap:16px">
+      <div>
+        <label style="display:block;font-size:12px;font-weight:700;color:var(--dark);margin-bottom:6px">Page Title <span style="color:#aaa;font-weight:400" id="seoTitleCount"></span></label>
+        <input type="text" id="seoTitle" placeholder="CapsLock Computers | Laptops &amp; PC Store Kuwait..." style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px" oninput="_seoUpdateCounts()" />
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;font-weight:700;color:var(--dark);margin-bottom:6px">Meta Description <span style="color:#aaa;font-weight:400" id="seoDescCount"></span></label>
+        <textarea id="seoDescription" rows="3" placeholder="Short description shown under the title in Google search results..." style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical" oninput="_seoUpdateCounts()"></textarea>
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;font-weight:700;color:var(--dark);margin-bottom:6px">Keywords <span style="color:#aaa;font-weight:400">(comma-separated)</span></label>
+        <textarea id="seoKeywords" rows="4" placeholder="laptop store Kuwait, PC store Kuwait, gaming laptop Kuwait, ..." style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+      </div>
+      <div class="seo-preview">
+        <div class="seo-preview-title" id="seoPreviewTitle">Page title preview</div>
+        <div class="seo-preview-url">pinqwt.github.io/Pin-Finder-Kuwait</div>
+        <div class="seo-preview-desc" id="seoPreviewDesc">Description preview will appear here as you type.</div>
+      </div>
+      <button class="newcat-save" style="width:fit-content" onclick="saveSEOSettings()"><i class="fa fa-save"></i>&nbsp; Save SEO Settings</button>
+    </div>
+
+    <!-- PER-PRODUCT DESCRIPTIONS & KEYWORDS — same editor style as the SEO
+         tab in the Hardware Kuwait admin, adapted so every product (base
+         catalog or admin-added) can get a custom description/keyword override
+         without needing to be a database row. -->
+    <div class="table-top" style="margin:34px 0 12px">
+      <h2><i class="fa fa-edit" style="color:var(--orange);margin-right:8px"></i>Product Descriptions &amp; Keywords</h2>
+      <div class="ctrl-right">
+        <div class="search-bar"><i class="fa fa-search" style="color:#aaa"></i><input type="text" id="seoProdSearch" placeholder="Search products..." oninput="renderSEOProducts()" /></div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--gray);margin:0 0 14px;max-width:640px">
+      Each product already has a built-in description shown on the storefront. Set an override here to
+      change what customers and Google see for that specific product, and add extra search keywords.
+    </p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th style="width:56px"></th><th>Product</th><th>Category</th><th>Description</th><th>Keywords</th><th style="width:90px"></th></tr>
+        </thead>
+        <tbody id="seoProdBody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- OWNER CONTROLS SECTION -->
   <div id="ownerSection" class="main" style="display:none">
     <div style="max-width:900px;margin:0 auto;">
@@ -1121,6 +1183,28 @@
   </div>
 </div>
 
+<!-- PER-PRODUCT SEO MODAL -->
+<div class="photo-overlay" id="seoProdOverlay" onclick="if(event.target===this)closeProductSEO()">
+  <div class="photo-box">
+    <div class="ph-header">
+      <h3><i class="fa fa-edit"></i> Description &amp; SEO</h3>
+      <button onclick="closeProductSEO()"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="ph-body">
+      <div class="ph-prod-name" id="seoProdName"></div>
+      <p style="font-size:12px;color:var(--gray);margin:0 0 14px">
+        Leave the description blank to keep the built-in one shown on the site — only fill it in to override
+        it. Keywords are extra search phrases specific to this product.
+      </p>
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--dark);margin-bottom:6px">Description Override <span style="color:#aaa;font-weight:400" id="seoProdDescCount"></span></label>
+      <textarea id="seoProdDesc" rows="5" placeholder="Leave blank to keep the built-in description..." oninput="document.getElementById('seoProdDescCount').textContent = this.value.length + ' characters'" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;margin-bottom:16px"></textarea>
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--dark);margin-bottom:6px">Search Keywords <span style="color:#aaa;font-weight:400">(comma-separated — specific to this product)</span></label>
+      <textarea id="seoProdKeywords" rows="3" placeholder="e.g. RTX 5070 Ti Kuwait, buy RTX 5070 Ti Kuwait, ASUS TUF Kuwait" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;margin-bottom:16px"></textarea>
+      <button class="ph-save-btn" onclick="saveProductSEO()"><i class="fa fa-check"></i>&nbsp; Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- PRODUCT STATS MODAL -->
 <div class="stats-overlay" id="statsOverlay" onclick="if(event.target===this)closeStats()">
   <div class="stats-box">
@@ -1301,6 +1385,10 @@ const UL = id => 'Products/SKU-' + String(id).padStart(4, '0') + '.jpg';
 
 let _customProductRows = []; // products added by admin (fetched from Supabase capslock_products table)
 let _hiddenBaseIds     = new Set(); // IDs of base products that have been hidden from the store
+// Per-product SEO overrides (description + keywords), synced via Supabase
+// capslock_settings (key 'product_seo') so they actually show up on the live
+// storefront.
+let _sbProductSEO = {};
 
 // ── ID CONFLICT RESOLVER ─────────────────────────────────────────────────────
 // Supabase auto-increment starts at 1, which conflicts with base product IDs 1-60.
@@ -1394,12 +1482,13 @@ async function _fixCustomProductIds() {
 
 async function loadFromSupabase() {
   showToast('Loading from cloud…');
-  const [s, p, c, h, cb] = await Promise.all([
+  const [s, p, c, h, cb, seo] = await Promise.all([
     sbFetch(SB_URL + '/rest/v1/capslock_stock?select=*',          { headers: SB_HDRS }),
     sbFetch(SB_URL + '/rest/v1/capslock_photos?select=*',         { headers: SB_HDRS }),
     sbFetch(SB_URL + '/rest/v1/capslock_products?select=*',       { headers: SB_HDRS }),
     sbFetch(SB_URL + '/rest/v1/capslock_hidden?select=product_id',{ headers: SB_HDRS }),
-    sbFetch(SB_URL + '/rest/v1/capslock_cat_bgs?select=*',        { headers: SB_HDRS })
+    sbFetch(SB_URL + '/rest/v1/capslock_cat_bgs?select=*',        { headers: SB_HDRS }),
+    sbFetch(SB_URL + '/rest/v1/capslock_settings?key=eq.product_seo&select=value', { headers: SB_HDRS })
   ]);
   // Category backgrounds
   if (!cb.error && Array.isArray(cb.data)) {
@@ -1444,6 +1533,11 @@ async function loadFromSupabase() {
     _hiddenBaseIds = new Set(h.data.map(function(r) { return r.product_id; }));
   }
 
+  // Per-product SEO overrides
+  if (!seo.error && Array.isArray(seo.data) && seo.data[0] && seo.data[0].value) {
+    try { _sbProductSEO = JSON.parse(seo.data[0].value); } catch(e) {}
+  }
+
   if (!s.error) showToast('Loaded from cloud ☁️');
 
   try {
@@ -1469,6 +1563,125 @@ function getAllAdminProducts() {
       return { id:p.id, name:p.name, cat:p.category, price:parseFloat(p.price), img:p.img_url||'', isBase:false, hidden:p.hidden||false };
     });
   return [...base, ...custom].sort(function(a,b){return a.id-b.id;});
+}
+
+// ── SEO SETTINGS ─────────────────────────────────────────────────────────────
+// Lets the owner/admin edit the site's Google search title/description/keywords
+// without touching code. Stored in Supabase (capslock_settings, key
+// 'seo_settings') and read by the storefront on every page load — same
+// key-value pattern already used for site_disabled.
+var _seoDefaults = {
+  title: 'CapsLock Computers | Laptops & PC Store Kuwait',
+  description: 'CapsLock Computers — Kuwait\'s laptop & PC store and repair center. Gaming laptops, GPUs, CPUs, motherboards, monitors, pre-built PCs and PC parts from ASUS, MSI, Gigabyte, Intel, AMD, Lenovo and more. Same-day delivery across Kuwait.',
+  keywords: 'laptop store Kuwait, PC store Kuwait, gaming laptop Kuwait, laptop repair Kuwait, GPU Kuwait, graphics card Kuwait, CPU Kuwait, processor Kuwait, motherboard Kuwait, gaming monitor Kuwait, pre-built PC Kuwait, custom PC build Kuwait, ASUS ROG Kuwait, MSI laptop Kuwait, Lenovo Legion Kuwait, laptop repairing center Kuwait, buy laptop Kuwait, computer shop Kuwait City, CapsLock Computers'
+};
+
+async function loadSEOSettings() {
+  var res = await sbFetch(SB_URL + '/rest/v1/capslock_settings?key=eq.seo_settings&select=value', { headers: SB_HDRS });
+  var seo = _seoDefaults;
+  if (!res.error && Array.isArray(res.data) && res.data[0] && res.data[0].value) {
+    try { seo = Object.assign({}, _seoDefaults, JSON.parse(res.data[0].value)); } catch(e) {}
+  }
+  document.getElementById('seoTitle').value = seo.title;
+  document.getElementById('seoDescription').value = seo.description;
+  document.getElementById('seoKeywords').value = seo.keywords;
+  _seoUpdateCounts();
+}
+
+function _seoUpdateCounts() {
+  var title = document.getElementById('seoTitle').value;
+  var desc  = document.getElementById('seoDescription').value;
+  document.getElementById('seoTitleCount').textContent = title.length + '/60 recommended';
+  document.getElementById('seoDescCount').textContent  = desc.length + '/160 recommended';
+  document.getElementById('seoPreviewTitle').textContent = title || 'Page title preview';
+  document.getElementById('seoPreviewDesc').textContent  = desc || 'Description preview will appear here as you type.';
+}
+
+async function saveSEOSettings() {
+  var title = document.getElementById('seoTitle').value.trim();
+  var description = document.getElementById('seoDescription').value.trim();
+  var keywords = document.getElementById('seoKeywords').value.trim();
+  if (!title || !description) { showToast('Title and description are required'); return; }
+  var value = JSON.stringify({ title: title, description: description, keywords: keywords });
+  var res = await sbFetch(SB_URL + '/rest/v1/capslock_settings', {
+    method: 'POST',
+    headers: Object.assign({}, SB_HDRS, { 'Prefer': 'resolution=merge-duplicates' }),
+    body: JSON.stringify([{ key: 'seo_settings', value: value }])
+  });
+  showToast(res.error ? 'Failed to save SEO settings' : 'SEO settings saved — live on the site now ✅');
+}
+
+// ── PER-PRODUCT SEO (description override + keywords) ────────────────────────
+// Both fields are optional overrides on top of each product's built-in
+// description — stored as one JSON map in capslock_settings (key
+// 'product_seo'), keyed by product id, so it works for base catalog products
+// (hardcoded in script.js) and admin-added products alike.
+var _seoProdId = null;
+function openProductSEO(id) {
+  var p = getAllAdminProducts().find(function(x){ return x.id === id; });
+  if (!p) return;
+  _seoProdId = id;
+  var seo = _sbProductSEO[id] || {};
+  document.getElementById('seoProdName').textContent = '#' + id + ' — ' + p.name;
+  document.getElementById('seoProdDesc').value = seo.desc || '';
+  document.getElementById('seoProdDescCount').textContent = (seo.desc || '').length + ' characters';
+  document.getElementById('seoProdKeywords').value = seo.keywords || '';
+  document.getElementById('seoProdOverlay').classList.add('open');
+}
+function closeProductSEO() {
+  document.getElementById('seoProdOverlay').classList.remove('open');
+  _seoProdId = null;
+}
+async function saveProductSEO() {
+  if (!_seoProdId) return;
+  var desc = document.getElementById('seoProdDesc').value.trim();
+  var keywords = document.getElementById('seoProdKeywords').value.trim();
+  if (desc || keywords) {
+    _sbProductSEO[_seoProdId] = { desc: desc, keywords: keywords };
+  } else {
+    delete _sbProductSEO[_seoProdId];
+  }
+  var res = await sbFetch(SB_URL + '/rest/v1/capslock_settings', {
+    method: 'POST',
+    headers: Object.assign({}, SB_HDRS, { 'Prefer': 'resolution=merge-duplicates' }),
+    body: JSON.stringify([{ key: 'product_seo', value: JSON.stringify(_sbProductSEO) }])
+  });
+  showToast(res.error ? 'Failed to save' : 'Product SEO saved ✅');
+  closeProductSEO();
+  if (document.getElementById('seoSection').style.display !== 'none') renderSEOProducts();
+}
+
+// ── SEO TAB PRODUCT LIST ─────────────────────────────────────────────────────
+// Every product with its description/keyword override status and an Edit
+// button — all SEO editing happens in this tab.
+function renderSEOProducts() {
+  var body = document.getElementById('seoProdBody');
+  if (!body) return;
+  var q = (document.getElementById('seoProdSearch').value || '').toLowerCase().trim();
+  var photos = {};
+  try { photos = JSON.parse(localStorage.getItem('capslock_photos') || '{}'); } catch(e) {}
+  var list = getAllAdminProducts().filter(function(p) {
+    return !q || p.name.toLowerCase().indexOf(q) !== -1 || getProductSku(p.id).toLowerCase().indexOf(q) !== -1;
+  });
+  body.innerHTML = list.map(function(p) {
+    var seo  = _sbProductSEO[p.id] || {};
+    var kw   = seo.keywords || '';
+    var ph   = photos[p.id];
+    var thumb = (ph && (ph.indexOf('http') === 0 || ph.indexOf('data:') === 0)) ? ph : (p.img || '');
+    var catDef = CAT_DEFS.find(function(c){ return c.slug === p.cat; });
+    return '<tr>' +
+      '<td>' + (thumb ? '<img class="prod-img" src="' + thumb + '" loading="lazy" onerror="this.style.opacity=0.3" />' : '<div class="prod-img" style="background:var(--light)"></div>') + '</td>' +
+      '<td><div class="prod-name">' + encodeHtml(p.name) + '</div><div class="prod-sku">' + getProductSku(p.id) + '</div></td>' +
+      '<td><span class="cat-pill">' + encodeHtml(catDef ? catDef.label : (p.cat || '').replace(/-/g, ' ')) + '</span></td>' +
+      '<td style="max-width:340px">' + (seo.desc
+        ? '<span style="font-size:12px;color:var(--gray);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px" title="' + encodeHtml(seo.desc) + '">' + encodeHtml(seo.desc) + '</span>'
+        : '<span style="color:#888;font-size:11px;font-weight:700">Default (built-in)</span>') + '</td>' +
+      '<td>' + (kw
+        ? '<span style="color:var(--green);font-size:11px;font-weight:700"><i class="fa fa-check"></i> ' + kw.split(',').length + '</span>'
+        : '<span style="color:#b45309;font-size:11px;font-weight:700">None</span>') + '</td>' +
+      '<td><button class="act-btn" style="background:#eef2ff;color:#4338ca;border-color:#c7d2fe" onclick="openProductSEO(' + p.id + ')"><i class="fa fa-edit"></i> Edit</button></td>' +
+    '</tr>';
+  }).join('') || '<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--gray)">No products match your search.</td></tr>';
 }
 
 const PRODUCTS = [
@@ -2019,6 +2232,7 @@ function switchTab(tab) {
   document.getElementById('salesSection').style.display      = tab==='sales'      ? 'block' : 'none';
   document.getElementById('reportsSection').style.display    = tab==='reports'    ? 'block' : 'none';
   document.getElementById('categoriesSection').style.display = tab==='categories' ? 'block' : 'none';
+  document.getElementById('seoSection').style.display        = tab==='seo'        ? 'block' : 'none';
   document.getElementById('ownerSection').style.display      = tab==='owner'      ? 'block' : 'none';
   document.getElementById('tabInventory').classList.toggle('active',   tab==='inventory');
   document.getElementById('tabAnalytics').classList.toggle('active',   tab==='analytics');
@@ -2027,6 +2241,7 @@ function switchTab(tab) {
   document.getElementById('tabSales').classList.toggle('active',       tab==='sales');
   document.getElementById('tabReports').classList.toggle('active',     tab==='reports');
   document.getElementById('tabCategories').classList.toggle('active',  tab==='categories');
+  document.getElementById('tabSeo').classList.toggle('active',         tab==='seo');
   document.getElementById('tabOwner').classList.toggle('active',       tab==='owner');
   if (tab==='analytics')   renderAnalytics();
   if (tab==='deleted')   { renderDeletedTab(); if (_deletedSubTab==='orders') renderDeletedOrdersTab(); }
@@ -2034,6 +2249,7 @@ function switchTab(tab) {
   if (tab==='sales')       renderSales();
   if (tab==='reports')   { renderReports(); renderOrdersReport(); _autoWriteReports(); }
   if (tab==='categories')  renderCatEditor();
+  if (tab==='seo')       { loadSEOSettings(); renderSEOProducts(); }
   if (tab==='owner')       renderSuperAdmin();
 }
 

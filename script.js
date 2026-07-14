@@ -29,6 +29,44 @@
   } catch(e) {}
 })();
 
+// ── SEO SETTINGS (editable in admin → SEO tab) ────────────────────────────
+// Overrides the title/description/keywords/OG tags baked into index.html for
+// crawlers that don't run JS — lets the owner edit them from admin without
+// touching code or redeploying. Runs standalone (own SB constants) since it
+// executes before the module-level SB_URL/SB_KEY consts below are initialized.
+(async function applySEOSettings() {
+  try {
+    const SB_URL_SEO = 'https://sinzmodmefkyjkzzitjy.supabase.co';
+    const SB_KEY_SEO = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpbnptb2RtZWZreWprenppdGp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxMjQ4MzYsImV4cCI6MjA5NTcwMDgzNn0.Ft88pQEKbSVP_yb7UTRVq2fLa_TScR97_jvJmgAMlSc';
+    const res = await fetch(SB_URL_SEO + '/rest/v1/capslock_settings?key=eq.seo_settings&select=value', {
+      headers: { 'apikey': SB_KEY_SEO, 'Authorization': 'Bearer ' + SB_KEY_SEO }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data || !data.length || !data[0].value) return;
+    const seo = JSON.parse(data[0].value);
+    if (seo.title) {
+      document.title = seo.title;
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      const twTitle = document.querySelector('meta[name="twitter:title"]');
+      if (ogTitle) ogTitle.setAttribute('content', seo.title);
+      if (twTitle) twTitle.setAttribute('content', seo.title);
+    }
+    if (seo.description) {
+      const desc   = document.querySelector('meta[name="description"]');
+      const ogDesc = document.querySelector('meta[property="og:description"]');
+      const twDesc = document.querySelector('meta[name="twitter:description"]');
+      if (desc)   desc.setAttribute('content', seo.description);
+      if (ogDesc) ogDesc.setAttribute('content', seo.description);
+      if (twDesc) twDesc.setAttribute('content', seo.description);
+    }
+    if (seo.keywords) {
+      const kw = document.querySelector('meta[name="keywords"]');
+      if (kw) kw.setAttribute('content', seo.keywords);
+    }
+  } catch(e) { /* Network error — static meta tags in index.html remain as fallback */ }
+})();
+
 function getProductSku(id) {
   try {
     var map = JSON.parse(localStorage.getItem('capslock_sku_map') || '{}');
@@ -58,13 +96,17 @@ let _sbStock    = {};
 let _sbPhotos   = {};
 let _customProds = [];
 let _hiddenIds   = new Set();
+// Per-product SEO overrides (description + keywords) set in admin → SEO tab.
+// Keyed by product id, e.g. { "12": { desc: "...", keywords: "a, b, c" } }.
+let _sbProductSEO = {};
 
 async function loadSBData() {
-  const [s, p, c, h] = await Promise.all([
+  const [s, p, c, h, seo] = await Promise.all([
     sbFetch(SB_URL + '/rest/v1/capslock_stock?select=*',           { headers: SB_H }),
     sbFetch(SB_URL + '/rest/v1/capslock_photos?select=*',          { headers: SB_H }),
     sbFetch(SB_URL + '/rest/v1/capslock_products?select=*',        { headers: SB_H }),
-    sbFetch(SB_URL + '/rest/v1/capslock_hidden?select=product_id', { headers: SB_H })
+    sbFetch(SB_URL + '/rest/v1/capslock_hidden?select=product_id', { headers: SB_H }),
+    sbFetch(SB_URL + '/rest/v1/capslock_settings?key=eq.product_seo&select=value', { headers: SB_H })
   ]);
   if (s.error) {
     try { _sbStock  = JSON.parse(localStorage.getItem('capslock_stock')  || '{}'); } catch(_) {}
@@ -78,7 +120,11 @@ async function loadSBData() {
       if (hidSet.size < 55) _hiddenIds = hidSet;
     }
   }
+  if (!seo.error && Array.isArray(seo.data) && seo.data[0] && seo.data[0].value) {
+    try { _sbProductSEO = JSON.parse(seo.data[0].value); } catch(_) {}
+  }
   renderProducts();
+  _injectProductSchema();
 }
 
 function normalizeCategory(raw) {
@@ -88,13 +134,70 @@ function normalizeCategory(raw) {
 
 function getAllProducts() {
   const baseIds = new Set(PRODUCTS.map(p => p.id));
-  const base  = PRODUCTS.filter(p => !_hiddenIds.has(p.id));
-  const extra = _customProds.filter(p => !baseIds.has(p.id) && p.id > 60).map(p => ({
-    id: p.id, name: p.name, category: normalizeCategory(p.category),
-    price: parseFloat(p.price), img: p.img_url || p.img || `https://picsum.photos/seed/pc${p.id}/420/320`,
-    desc: p.description || p.desc || '', badge: p.badge || null, stock: 'in-stock'
-  }));
+  const base  = PRODUCTS.filter(p => !_hiddenIds.has(p.id)).map(p => {
+    const seo = _sbProductSEO[p.id];
+    return (seo && (seo.desc || seo.keywords)) ? Object.assign({}, p, { desc: seo.desc || p.desc, keywords: seo.keywords || '' }) : p;
+  });
+  const extra = _customProds.filter(p => !baseIds.has(p.id) && p.id > 60).map(p => {
+    const seo = _sbProductSEO[p.id] || {};
+    return {
+      id: p.id, name: p.name, category: normalizeCategory(p.category),
+      price: parseFloat(p.price), img: p.img_url || p.img || `https://picsum.photos/seed/pc${p.id}/420/320`,
+      desc: seo.desc || p.description || p.desc || '', keywords: seo.keywords || '', badge: p.badge || null, stock: 'in-stock'
+    };
+  });
   return [...base, ...extra];
+}
+
+// ── PRODUCT STRUCTURED DATA ───────────────────────────────────────────────
+// Injects/updates a Product ItemList JSON-LD block so Google can understand
+// and potentially show rich results for the actual catalog — rebuilt from
+// the real live product data each time it loads (see loadSBData) rather than
+// a static, easily-stale snapshot.
+function _injectProductSchema() {
+  const products = getAllProducts();
+  if (!products.length) return;
+  // Offer prices are always current (fetched live from Supabase), so a
+  // far-future validity date is the standard convention for a perpetual
+  // catalog rather than a real expiry — set once per page load.
+  const priceValidUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const itemList = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    'itemListElement': products.map(function(p, i) {
+      const photo = (_sbPhotos[p.id] && (_sbPhotos[p.id].startsWith('http') || _sbPhotos[p.id].startsWith('data:'))) ? _sbPhotos[p.id] : p.img;
+      const liveStatus = getLiveStock(p.id) || p.stock;
+      return {
+        '@type': 'ListItem',
+        'position': i + 1,
+        'item': {
+          '@type': 'Product',
+          'name': p.name,
+          'description': p.desc || undefined,
+          'sku': getProductSku(p.id).replace(/^SKU[-:]\s*/, ''),
+          'category': p.category,
+          'keywords': p.keywords || undefined,
+          'image': (photo && photo.startsWith('http')) ? photo : undefined,
+          'offers': {
+            '@type': 'Offer',
+            'priceCurrency': 'KWD',
+            'price': p.price,
+            'priceValidUntil': priceValidUntil,
+            'itemCondition': 'https://schema.org/NewCondition',
+            'availability': liveStatus === 'out-of-stock' ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock'
+          }
+        }
+      };
+    })
+  };
+  let tag = document.getElementById('productListSchema');
+  if (!tag) {
+    tag = document.createElement('script');
+    tag.type = 'application/ld+json';
+    tag.id = 'productListSchema';
+    document.head.appendChild(tag);
+  }
+  tag.textContent = JSON.stringify(itemList);
 }
 
 const PRODUCTS = [
@@ -832,6 +935,12 @@ document.querySelectorAll('.pill').forEach(pill => {
   pill.addEventListener('click', () => { activeFilter = pill.dataset.filter; syncCatNav(activeFilter); renderProducts(); });
 });
 document.getElementById('searchInput').addEventListener('input', renderProducts);
+// Sitelinks search box (schema.org SearchAction in index.html) — a Google
+// result can deep-link straight into a query on this site via ?q=.
+try {
+  var _qp = new URLSearchParams(location.search).get('q');
+  if (_qp) document.getElementById('searchInput').value = _qp;
+} catch(e) {}
 document.getElementById('contactForm').addEventListener('submit', e => {
   e.preventDefault();
   document.getElementById('formSuccess').classList.add('show');
