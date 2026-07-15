@@ -858,7 +858,7 @@ form.search-wrap { border:none; outline:none; }
   display: flex;
   gap: 20px;
   width: max-content;
-  animation: feat-scroll 38s linear infinite;
+  animation: feat-scroll 65s linear infinite;
   will-change: transform;
   padding: 8px 0 14px;
 }
