@@ -579,7 +579,7 @@ function initFeaturedTicker() {
       : `<div class="feat-price">${p.price.toFixed(3)} KWD</div>`;
     return `
     <div class="feat-card" onclick="openProductModal(${p.id})">
-      <div class="feat-img-wrap"><img src="${p.img}" alt="${p.name}" onerror="this.src='https://picsum.photos/seed/pc${p.id}/200/140'"/></div>
+      <div class="feat-img-wrap"><img src="${p.img}" alt="${p.name}" loading="lazy" width="200" height="140" onerror="this.src='https://picsum.photos/seed/pc${p.id}/200/140'"/></div>
       <div class="feat-info">
         ${hasSale ? `<span class="feat-sale-badge">-${p._sale}%</span>` : (p.badge ? `<span class="feat-badge">${p.badge}</span>` : '')}
         <div class="feat-name">${p.name}</div>
@@ -588,6 +588,16 @@ function initFeaturedTicker() {
     </div>`;
   }).join('');
   track.innerHTML = cards + cards; // duplicate for seamless loop
+  // Fixed-duration animation meant a small selection crawled while a large
+  // one (e.g. every product picked in admin) raced by fast enough to choke
+  // mobile rendering — scale duration to the actual rendered width instead,
+  // so the scroll speed (~55px/s) stays constant no matter how many products
+  // are featured.
+  requestAnimationFrame(() => {
+    const uniqueWidth = track.scrollWidth / 2;
+    const duration = Math.max(20, Math.round(uniqueWidth / 55));
+    track.style.animationDuration = duration + 's';
+  });
 }
 
 function getMultiCats(id) {
