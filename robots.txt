@@ -1,6 +1,2 @@
 User-agent: *
-Allow: /
-Disallow: /admin.html
-Disallow: /admin_check.js
-
-Sitemap: https://pinqwt.github.io/Pin-Finder-Kuwait/sitemap.xml
+Disallow: /
